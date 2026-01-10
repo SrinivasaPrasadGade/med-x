@@ -1,1 +1,0 @@
-# HealthCareBridge-TechSprint
