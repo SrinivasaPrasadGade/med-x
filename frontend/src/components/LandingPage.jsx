@@ -21,7 +21,7 @@ export default function LandingPage({ onEnter }) {
 
         try {
             let userData;
-            if (mode === 'login') {
+            if (mode === 'login' || mode === 'doctor-login') {
                 userData = await api.login({ email: formData.email, password: formData.password });
             } else if (mode === 'register') {
                 await api.register({ email: formData.email, password: formData.password, full_name: formData.fullName });
@@ -55,8 +55,8 @@ export default function LandingPage({ onEnter }) {
             icon: '👨‍⚕️',
             title: 'For Doctors',
             desc: 'AI clinical notes, smart scheduling, and instant OCR.',
-            action: () => setMode('register-org'),
-            btnText: 'Provider Access',
+            action: () => setMode('doctor-login'),
+            btnText: 'Doctor login',
             secondary: true
         },
         {
@@ -256,10 +256,10 @@ export default function LandingPage({ onEnter }) {
                 </button>
 
                 <h2 style={{ textAlign: 'center', marginBottom: '0.75rem', fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-1px' }}>
-                    {mode === 'login' ? 'Welcome Back' : (mode === 'register-org' ? 'New Partner' : 'Join Us')}
+                    {mode === 'login' ? 'Welcome Back' : (mode === 'doctor-login' ? 'Doctor Login' : (mode === 'register-org' ? 'New Partner' : 'Join Us'))}
                 </h2>
                 <p style={{ textAlign: 'center', color: 'var(--text-dim)', marginBottom: '3rem', fontSize: '1.1rem' }}>
-                    {mode === 'login' ? 'Continue your health journey.' : 'Create your account to get support.'}
+                    {mode === 'login' || mode === 'doctor-login' ? 'Continue your health journey.' : 'Create your account to get support.'}
                 </p>
 
                 <form onSubmit={handleSubmit} className="form-container">
@@ -313,11 +313,12 @@ export default function LandingPage({ onEnter }) {
                     </div>
 
                     <button type="submit" className="btn-primary" style={{ width: '100%', padding: '1.25rem', marginTop: '1rem', fontSize: '1.1rem' }} disabled={loading}>
-                        {loading ? 'Processing...' : (mode === 'login' ? 'Sign In' : 'Create Account')}
+                        {loading ? 'Processing...' : (mode === 'login' || mode === 'doctor-login' ? 'Sign In' : 'Create Account')}
                     </button>
                 </form>
 
                 <div style={{ marginTop: '2.5rem', textAlign: 'center', fontSize: '0.95rem', color: 'var(--text-dim)', borderTop: '1px solid rgba(0,0,0,0.05)', paddingTop: '2rem' }}>
+
                     {mode === 'login' ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                             <div>
