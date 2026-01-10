@@ -1,5 +1,5 @@
 {
-    "name": "healthbridge-ai-root",
+    "name": "medx-root",
     "private": true,
     "scripts": {
         "build": "npm run build --prefix frontend -- --outDir ../dist",

@@ -11,7 +11,13 @@ export default function PatientDashboard({ user, setUser }) {
 
     // Find Care State
     const [doctors, setDoctors] = useState([]);
-    const [specializationFilter, setSpecializationFilter] = useState('');
+    // Filter State
+    const [filters, setFilters] = useState({
+        search: '',
+        specialization: '',
+        hospital: '',
+        minRating: 0
+    });
     const [selectedDoctor, setSelectedDoctor] = useState(null); // For booking modal
     const [bookingData, setBookingData] = useState({ dateTime: '', reason: '' });
 
@@ -22,16 +28,18 @@ export default function PatientDashboard({ user, setUser }) {
     const [profileData, setProfileData] = useState({ fullName: user.user_name, password: '' });
 
     useEffect(() => {
+        setMsg(null); // Clear messages on tab change
         if (activeTab === 'findCare') {
             loadDoctors();
-        } else if (activeTab === 'myHealth') {
+        } else if (activeTab === 'appointments') {
             loadAppointments();
         }
     }, [activeTab]);
 
     const loadDoctors = async () => {
         try {
-            const data = await api.getAllDoctors(specializationFilter);
+            // Fetch all doctors to allow client-side filtering
+            const data = await api.getAllDoctors();
             setDoctors(data);
         } catch (e) {
             console.error("Failed to load doctors", e);
@@ -48,10 +56,7 @@ export default function PatientDashboard({ user, setUser }) {
     };
 
     // Actions
-    const handleSearchDocs = (e) => {
-        e.preventDefault();
-        loadDoctors();
-    };
+    // handleSearchDocs removed as filtering is live/client-side now
 
     const handleBookAppointment = async (e) => {
         e.preventDefault();
@@ -124,10 +129,16 @@ export default function PatientDashboard({ user, setUser }) {
                     🔍 Find Care
                 </button>
                 <button
-                    className={`tab-button ${activeTab === 'myHealth' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('myHealth')}
+                    className={`tab-button ${activeTab === 'appointments' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('appointments')}
                 >
-                    ❤️ My Health
+                    📅 My Appointments
+                </button>
+                <button
+                    className={`tab-button ${activeTab === 'documents' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('documents')}
+                >
+                    📂 My Docs
                 </button>
                 <button
                     className={`tab-button ${activeTab === 'profile' ? 'active' : ''}`}
@@ -139,66 +150,145 @@ export default function PatientDashboard({ user, setUser }) {
                     className={`tab-button ${activeTab === 'interactions' ? 'active' : ''}`}
                     onClick={() => setActiveTab('interactions')}
                 >
-                    💊 Safety Guard
+                    🛡️ Safety Guard
                 </button>
                 <button
                     className={`tab-button ${activeTab === 'medications' ? 'active' : ''}`}
                     onClick={() => setActiveTab('medications')}
                 >
-                    🏥 Care Plan
+                    💊 My Meds
                 </button>
                 <button
                     className={`tab-button ${activeTab === 'scanner' ? 'active' : ''}`}
                     onClick={() => setActiveTab('scanner')}
                 >
-                    📸 Smart Scanner
+                    📸 Scanner Doc
                 </button>
             </div>
 
             {activeTab === 'findCare' && (
                 <div className="glass-card" style={{ padding: '2rem' }}>
                     <div className="section-title">Find a Doctor</div>
-                    <form onSubmit={handleSearchDocs} className="search-wrapper" style={{ marginBottom: '2rem' }}>
-                        <span className="search-icon">🔍</span>
-                        <input
-                            type="text"
-                            value={specializationFilter}
-                            onChange={e => setSpecializationFilter(e.target.value)}
-                            placeholder="Filter by Specialization (e.g. Cardio)"
-                        />
-                        <button type="submit" className="btn-primary">Filter</button>
-                    </form>
 
-                    <div className="card-list">
-                        {doctors.map(doc => (
-                            <div key={doc.id} className="list-item">
-                                <div className="list-item-header">
+                    {/* Unique values for dropdowns */}
+                    {(() => {
+                        const uniqueSpecs = [...new Set(doctors.map(d => d.specialization || 'General Practice'))];
+                        const uniqueHospitals = [...new Set(doctors.map(d => d.organization_name))];
+
+                        const filteredDoctors = doctors.filter(doc => {
+                            const nameMatch = doc.full_name.toLowerCase().includes(filters.search.toLowerCase());
+                            const specMatch = filters.specialization ? (doc.specialization || 'General Practice') === filters.specialization : true;
+                            const hospitalMatch = filters.hospital ? doc.organization_name === filters.hospital : true;
+                            const ratingMatch = filters.minRating ? (doc.rating || 0) >= parseFloat(filters.minRating) : true;
+                            return nameMatch && specMatch && hospitalMatch && ratingMatch;
+                        });
+
+                        return (
+                            <>
+                                <div className="filter-grid" style={{ marginBottom: '2rem' }}>
                                     <div>
-                                        <div className="list-item-title">{doc.full_name}</div>
-                                        <div className="list-item-subtitle">{doc.specialization || 'General Practice'}</div>
+                                        <label className="form-label">Search Name</label>
+                                        <div className="input-icon-wrapper">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                                            </svg>
+                                            <input
+                                                type="text"
+                                                className="form-input"
+                                                value={filters.search}
+                                                onChange={e => setFilters({ ...filters, search: e.target.value })}
+                                                placeholder="Dr. Name..."
+                                            />
+                                        </div>
                                     </div>
-                                    <button
-                                        className="btn-primary"
-                                        style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-                                        onClick={() => setSelectedDoctor(doc)}
-                                    >
-                                        Book Now
-                                    </button>
+                                    <div>
+                                        <label className="form-label">Specialization</label>
+                                        <div className="input-icon-wrapper">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+                                            </svg>
+                                            <select
+                                                className="form-select"
+                                                value={filters.specialization}
+                                                onChange={e => setFilters({ ...filters, specialization: e.target.value })}
+                                            >
+                                                <option value="">All Specializations</option>
+                                                {uniqueSpecs.map(s => <option key={s} value={s}>{s}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="form-label">Hospital</label>
+                                        <div className="input-icon-wrapper">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                            </svg>
+                                            <select
+                                                className="form-select"
+                                                value={filters.hospital}
+                                                onChange={e => setFilters({ ...filters, hospital: e.target.value })}
+                                            >
+                                                <option value="">All Hospitals</option>
+                                                {uniqueHospitals.map(h => <option key={h} value={h}>{h}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="form-label">Rating</label>
+                                        <div className="input-icon-wrapper">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                                            </svg>
+                                            <select
+                                                className="form-select"
+                                                value={filters.minRating}
+                                                onChange={e => setFilters({ ...filters, minRating: e.target.value })}
+                                            >
+                                                <option value="0">Any Rating</option>
+                                                <option value="3.5">3.5+ ⭐</option>
+                                                <option value="4.0">4.0+ ⭐</option>
+                                                <option value="4.5">4.5+ ⭐</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="list-item-meta">
-                                    🏥 {doc.organization_name}
+
+                                <div className="card-list">
+                                    {filteredDoctors.map(doc => (
+                                        <div key={doc.id} className="list-item">
+                                            <div className="list-item-header">
+                                                <div>
+                                                    <div className="list-item-title">{doc.full_name}</div>
+                                                    <div className="list-item-subtitle">{doc.specialization || 'General Practice'}</div>
+                                                    <div style={{ fontSize: '0.85rem', color: 'var(--warning)', marginTop: '0.2rem' }}>
+                                                        ⭐ {doc.rating} / 5.0
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    className="btn-primary"
+                                                    style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                                                    onClick={() => setSelectedDoctor(doc)}
+                                                >
+                                                    Book Now
+                                                </button>
+                                            </div>
+                                            <div className="list-item-meta">
+                                                🏥 {doc.organization_name}
+                                            </div>
+                                            <div className="list-item-meta">
+                                                🕒 {doc.availability || 'Contact for hours'}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                                <div className="list-item-meta">
-                                    🕒 {doc.availability || 'Contact for hours'}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    {doctors.length === 0 && <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: '2rem' }}>No doctors found matching criteria.</p>}
+                                {filteredDoctors.length === 0 && <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: '2rem' }}>No doctors found matching criteria.</p>}
+                            </>
+                        );
+                    })()}
                 </div>
             )}
 
-            {activeTab === 'myHealth' && (
+            {activeTab === 'appointments' && (
                 <div className="glass-card" style={{ padding: '2rem' }}>
                     <h3 className="section-title">My Appointment History</h3>
                     <div className="card-list">
@@ -244,6 +334,63 @@ export default function PatientDashboard({ user, setUser }) {
                                 </div>
                             ))
                         )}
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'documents' && (
+                <div className="glass-card" style={{ padding: '2rem' }}>
+                    <h3 className="section-title">My Documents</h3>
+                    <div className="card-list">
+                        <div className="list-item">
+                            <div className="list-item-header">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <span style={{ fontSize: '1.5rem' }}>🪪</span>
+                                    <div>
+                                        <div className="list-item-title">Medical Card</div>
+                                        <div className="list-item-subtitle">ID: HB-8829-221</div>
+                                    </div>
+                                </div>
+                                <button className="btn-primary" style={{ padding: '0.5rem 1rem' }}>View</button>
+                            </div>
+                        </div>
+                        <div className="list-item">
+                            <div className="list-item-header">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <span style={{ fontSize: '1.5rem' }}>📄</span>
+                                    <div>
+                                        <div className="list-item-title">Insurance Details</div>
+                                        <div className="list-item-subtitle">Provider: HealthSure Inc.</div>
+                                    </div>
+                                </div>
+                                <button className="btn-primary" style={{ padding: '0.5rem 1rem' }}>View</button>
+                            </div>
+                            <div className="list-item-meta">Policy #: 99281102 | Valid thru: 12/2026</div>
+                        </div>
+                        <div className="list-item">
+                            <div className="list-item-header">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <span style={{ fontSize: '1.5rem' }}>📋</span>
+                                    <div>
+                                        <div className="list-item-title">Previous Illness Record</div>
+                                        <div className="list-item-subtitle">Updated: Nov 10, 2025</div>
+                                    </div>
+                                </div>
+                                <button className="btn-primary" style={{ padding: '0.5rem 1rem' }}>View</button>
+                            </div>
+                        </div>
+                        <div className="list-item">
+                            <div className="list-item-header">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <span style={{ fontSize: '1.5rem' }}>💉</span>
+                                    <div>
+                                        <div className="list-item-title">Vaccination History</div>
+                                        <div className="list-item-subtitle">All up to date</div>
+                                    </div>
+                                </div>
+                                <button className="btn-primary" style={{ padding: '0.5rem 1rem' }}>View</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

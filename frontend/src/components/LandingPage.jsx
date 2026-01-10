@@ -92,7 +92,7 @@ export default function LandingPage({ onEnter }) {
                     letterSpacing: '-2px',
                     color: '#1F2937'
                 }}>
-                    Health
+                    MedX
                     <span style={{ display: 'block' }}>is Support.</span>
                 </h1>
 
@@ -289,7 +289,7 @@ export default function LandingPage({ onEnter }) {
             {/* Navbar for Landing only */}
             {mode === 'landing' && (
                 <div style={{ padding: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
-                    <div style={{ fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-1px' }}>HealthBridge AI</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.5rem', letterSpacing: '-1px' }}>MedX</div>
                     <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
                         <span style={{ fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>Who We Are</span>
                         <span style={{ fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer' }}>What We Do</span>
@@ -301,7 +301,7 @@ export default function LandingPage({ onEnter }) {
             {mode === 'landing' ? renderHero() : renderAuthForm()}
 
             <footer style={{ marginTop: 'auto', padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-                <p style={{ fontWeight: 500 }}>&copy; 2026 HealthBridge AI. All rights reserved.</p>
+                <p style={{ fontWeight: 500 }}>&copy; 2026 MedX. All rights reserved.</p>
             </footer>
         </div>
     );

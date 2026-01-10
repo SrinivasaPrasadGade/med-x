@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import os
 import json
+import random
 import google.generativeai as genai
 
 from dotenv import load_dotenv
@@ -433,7 +434,8 @@ async def get_all_doctors(specialization: Optional[str] = None, db: Session = De
         "specialization": d.specialization,
         "availability": d.availability,
         "organization_id": d.organization_id,
-        "organization_name": d.organization.name if d.organization else "Unknown"
+        "organization_name": d.organization.name if d.organization else "Unknown",
+        "rating": round(random.uniform(3.5, 5.0), 1)
     } for d in doctors]
 
 @app.get("/api/patient/appointments")

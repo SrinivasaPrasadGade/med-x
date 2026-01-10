@@ -65,7 +65,7 @@ function App() {
         <header className="app-header">
           <div className="header-content">
             <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-              <h1 className="app-title">HealthBridge AI</h1>
+              <h1 className="app-title">MedX</h1>
               <button
                 onClick={() => { setUser(null); setShowLanding(true); }}
                 style={{
@@ -97,7 +97,7 @@ function App() {
         <header className="app-header">
           <div className="header-content">
             <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-              <h1 className="app-title">HealthBridge AI</h1>
+              <h1 className="app-title">MedX</h1>
               <button
                 onClick={() => { setUser(null); setShowLanding(true); }}
                 style={{
@@ -129,7 +129,7 @@ function App() {
         <header className="app-header">
           <div className="header-content">
             <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-              <h1 className="app-title">HealthBridge AI</h1>
+              <h1 className="app-title">MedX</h1>
               <button
                 onClick={() => { setUser(null); setShowLanding(true); }}
                 style={{
@@ -159,7 +159,7 @@ function App() {
       <header className="app-header">
         <div className="header-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-            <h1 className="app-title">HealthBridge AI {user ? `| ${user.user_name}` : ''}</h1>
+            <h1 className="app-title">MedX {user ? `| ${user.user_name}` : ''}</h1>
             <button
               onClick={() => { setUser(null); setShowLanding(true); }}
               style={{

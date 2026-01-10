@@ -1,6 +1,6 @@
-# 👋 Welcome to HealthCareBridge
+# 👋 Welcome to MedX
 
-**HealthCareBridge** is a next-generation healthcare platform that bridges the gap between patients and clinicians using the power of AI. It simplifies medication management, unlocks insights from clinical notes, and provides intelligent health coaching—all in one secure, interoperable system.
+**MedX** is a next-generation healthcare platform that bridges the gap between patients and clinicians using the power of AI. It simplifies medication management, unlocks insights from clinical notes, and provides intelligent health coaching—all in one secure, interoperable system.
 
 ---
 
@@ -26,7 +26,7 @@ The platform is built as a set of robust microservices to ensure scalability and
 1.  **Frontend (React + Vite)**: A modern, responsive dashboard for patients and doctors.
 2.  **Patient Service (FastAPI)**: Manages medication schedules, adherence logs, and user data (using Firestore/SQLite).
 3.  **Clinical Service (FastAPI)**: Handles the processing of clinical notes and transformation to FHIR standards.
-4.  **HealthBridge AI (FastAPI + Gemini)**: The "brain" of the operation. Handles NLP, image recognition (prescriptions), and generative AI tasks.
+4.  **MedX AI (FastAPI + Gemini)**: The "brain" of the operation. Handles NLP, image recognition (prescriptions), and generative AI tasks.
 5.  **Analytics Pipeline**: Ingests events to track system usage and health trends.
 
 ---
@@ -53,7 +53,7 @@ Getting the entire system up and running is easy with Docker.
 1.  **Clone the repository**:
     ```bash
     git clone <repository-url>
-    cd HealthCareBridge-TechSprint
+    cd MedX
     ```
 
 2.  **Set up Environment Variables**:

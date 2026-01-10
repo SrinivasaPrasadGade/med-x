@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "🚀 Starting HealthBridge AI Development Environment..."
+echo "🚀 Starting MedX Development Environment..."
 
 # Function to kill processes on exit
 cleanup() {
