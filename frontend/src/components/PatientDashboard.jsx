@@ -1,7 +1,9 @@
+```
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
 import DrugInteractionChecker from './DrugInteractionChecker';
 import MedicationManager from './MedicationManager';
+import DocumentManager from './DocumentManager';
 import PrescriptionScanner from './PrescriptionScanner';
 import { Search, MapPin, Star, Calendar, Clock, FileText, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 
@@ -136,10 +138,12 @@ export default function PatientDashboard({ user, setUser }) {
                         onClick={() => setActiveTab(tab.id)}
                         className={`
                             flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all whitespace-nowrap border
-                            ${activeTab === tab.id
-                                ? 'bg-white text-primary border-primary/20 shadow-sm'
-                                : 'bg-transparent text-muted-foreground border-transparent hover:bg-secondary/50'}
-                        `}
+                            ${
+    activeTab === tab.id
+        ? 'bg-white text-primary border-primary/20 shadow-sm'
+        : 'bg-transparent text-muted-foreground border-transparent hover:bg-secondary/50'
+}
+`}
                     >
                         <span>{tab.icon}</span>
                         {tab.label}
@@ -250,9 +254,9 @@ export default function PatientDashboard({ user, setUser }) {
                             ) : (
                                 appointments.map(appt => (
                                     <div key={appt.id} className={`
-                                        bg-white p-6 rounded-2xl border-l-[6px] shadow-sm relative overflow-hidden
-                                        ${appt.status === 'Completed' ? 'border-l-green-500' : appt.status === 'Cancelled' ? 'border-l-red-500' : 'border-l-blue-500'}
-                                    `}>
+bg-white p-6 rounded-2xl border-l-[6px] shadow-sm relative overflow-hidden
+                                        ${ appt.status === 'Completed' ? 'border-l-green-500' : appt.status === 'Cancelled' ? 'border-l-red-500' : 'border-l-blue-500' }
+`}>
                                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                                             <div>
                                                 <div className="flex items-center gap-2 mb-1">
@@ -262,9 +266,9 @@ export default function PatientDashboard({ user, setUser }) {
                                                 <div className="text-lg font-bold text-foreground">Dr. {appt.doctor_name} <span className="text-sm font-normal text-muted-foreground">({appt.specialization})</span></div>
                                             </div>
                                             <span className={`
-                                                px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider
-                                                ${appt.status === 'Completed' ? 'bg-green-100 text-green-700' : appt.status === 'Cancelled' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}
-                                            `}>
+px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider
+                                                ${ appt.status === 'Completed' ? 'bg-green-100 text-green-700' : appt.status === 'Cancelled' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700' }
+`}>
                                                 {appt.status}
                                             </span>
                                         </div>
@@ -325,7 +329,7 @@ export default function PatientDashboard({ user, setUser }) {
                             </div>
 
                             {msg && (
-                                <div className={`p-4 rounded-xl text-center font-medium ${msg.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+                                <div className={`p-4 rounded-xl text-center font-medium ${ msg.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700' } `}>
                                     {msg.text}
                                 </div>
                             )}
@@ -353,6 +357,12 @@ export default function PatientDashboard({ user, setUser }) {
                 {activeTab === 'interactions' && (
                     <div className="animate-in fade-in slide-in-from-bottom-4">
                         <DrugInteractionChecker />
+                    </div>
+                )}
+
+                {activeTab === 'documents' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4">
+                        <DocumentManager user={user} />
                     </div>
                 )}
             </div>

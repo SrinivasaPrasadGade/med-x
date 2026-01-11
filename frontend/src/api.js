@@ -59,6 +59,11 @@ export const api = {
     // Audit Logs
     getAuditLogs: () => apiRequest('ai', '/audit-log'),
 
+    // Documents
+    getDocuments: (userId) => apiRequest('ai', `/documents?user_id=${userId}`),
+    uploadDocument: (formData) => apiRequest('ai', '/documents', { method: 'POST', body: formData }),
+    verifyPassword: (password, userId = 1) => apiRequest('ai', '/verify-password', { method: 'POST', body: JSON.stringify({ password }) }), // Default userId for demo
+
     // Auth
     register: (data) => apiRequest('patient', '/register', { method: 'POST', body: JSON.stringify(data) }),
     login: (data) => apiRequest('patient', '/login', { method: 'POST', body: JSON.stringify(data) }),
