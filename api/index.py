@@ -819,8 +819,18 @@ async def generate_coaching(context: Dict[str, Any]):
     }
 
 # Document Endpoints
-UPLOAD_DIR = Path("uploads")
-UPLOAD_DIR.mkdir(exist_ok=True)
+# Document Endpoints
+try:
+    UPLOAD_DIR = Path("uploads")
+    UPLOAD_DIR.mkdir(exist_ok=True)
+    # Test write access
+    test_file = UPLOAD_DIR / ".test"
+    test_file.touch()
+    test_file.unlink()
+except OSError:
+    print("Warning: Read-only filesystem detected. Using /tmp/uploads")
+    UPLOAD_DIR = Path("/tmp/uploads")
+    UPLOAD_DIR.mkdir(exist_ok=True, parents=True)
 
 @app.post("/api/documents")
 async def upload_document(
