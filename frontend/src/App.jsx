@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { api } from './api'
-import './App.css'
 import config from './config'
 import Dashboard from './components/Dashboard'
 import ClinicalNoteAnalyzer from './components/ClinicalNoteAnalyzer'
@@ -12,6 +11,8 @@ import LandingPage from './components/LandingPage'
 import OrgDashboard from './components/OrgDashboard'
 import DoctorDashboard from './components/DoctorDashboard'
 import PatientDashboard from './components/PatientDashboard'
+
+import { LogOut, Activity, LayoutDashboard, FileText, Scan, ShieldCheck, Pill } from 'lucide-react'
 
 function App() {
   const [showLanding, setShowLanding] = useState(true)
@@ -45,11 +46,11 @@ function App() {
   }, [])
 
   const tabs = [
-    { id: 'dashboard', label: 'Executive Overview', component: Dashboard },
-    { id: 'clinical', label: 'Clinical Intelligence', component: ClinicalNoteAnalyzer },
-    { id: 'prescription', label: 'Smart Scanner', component: PrescriptionScanner },
-    { id: 'interactions', label: 'Safety Guard', component: DrugInteractionChecker },
-    { id: 'medications', label: 'Patient Care', component: MedicationManager }
+    { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, component: Dashboard },
+    { id: 'clinical', label: 'Clinical Intelligence', icon: FileText, component: ClinicalNoteAnalyzer },
+    { id: 'prescription', label: 'Smart Scanner', icon: Scan, component: PrescriptionScanner },
+    { id: 'interactions', label: 'Safety Guard', icon: ShieldCheck, component: DrugInteractionChecker },
+    { id: 'medications', label: 'Patient Care', icon: Pill, component: MedicationManager }
   ]
 
   const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || Dashboard
@@ -58,33 +59,48 @@ function App() {
     return <LandingPage onEnter={(u) => { setUser(u); setShowLanding(false); }} />
   }
 
+  // Common Header Component
+  const Header = ({ role }) => (
+    <header className="sticky top-0 z-40 w-full border-b border-white/20 bg-white/70 backdrop-blur-xl">
+      <div className="flex h-16 items-center justify-between px-6 max-w-[1400px] mx-auto">
+        <div className="flex items-center gap-4">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-xl">M</div>
+          <h1 className="text-xl font-bold tracking-tight text-foreground">
+            MedX <span className="text-muted-foreground font-normal mx-2">|</span> {user?.user_name || 'User'}
+          </h1>
+          <span className="px-2 py-0.5 rounded-full bg-secondary text-xs font-semibold text-muted-foreground uppercase">{role}</span>
+        </div>
+
+        <div className="flex items-center gap-6">
+          {/* Service Status Indicators */}
+          <div className="hidden md:flex items-center gap-4 px-4 py-1.5 bg-secondary/50 rounded-full border border-white/40">
+            {Object.entries(serviceStatus).map(([service, status]) => (
+              <div key={service} className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <span className={`w-2 h-2 rounded-full ${status === 'healthy' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-red-500'}`} />
+                <span className="capitalize">{service}</span>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={() => { setUser(null); setShowLanding(true); }}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-destructive bg-destructive/5 hover:bg-destructive/10 rounded-full transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
+          </button>
+        </div>
+      </div>
+    </header>
+  )
+
   // Org Admin View
   if (user?.role === 'org_admin') {
     return (
-      <div className="app-container">
-        <header className="app-header">
-          <div className="header-content">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-              <h1 className="app-title">MedX</h1>
-              <button
-                onClick={() => { setUser(null); setShowLanding(true); }}
-                style={{
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  color: 'var(--danger)',
-                  border: '1px solid rgba(239, 68, 68, 0.2)',
-                  padding: '0.5rem 1rem',
-                  fontSize: '0.875rem'
-                }}
-              >
-                Logout (Org Admin)
-              </button>
-            </div>
-          </div>
-        </header>
-        <main className="main-content">
-          <div className="container">
-            <OrgDashboard user={user} />
-          </div>
+      <div className="min-h-screen bg-background">
+        <Header role="Admin" />
+        <main className="p-6 max-w-[1400px] mx-auto">
+          <OrgDashboard user={user} />
         </main>
       </div>
     )
@@ -93,30 +109,10 @@ function App() {
   // Doctor View
   if (user?.role === 'doctor') {
     return (
-      <div className="app-container">
-        <header className="app-header">
-          <div className="header-content">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-              <h1 className="app-title">MedX</h1>
-              <button
-                onClick={() => { setUser(null); setShowLanding(true); }}
-                style={{
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  color: 'var(--danger)',
-                  border: '1px solid rgba(239, 68, 68, 0.2)',
-                  padding: '0.5rem 1rem',
-                  fontSize: '0.875rem'
-                }}
-              >
-                Logout (Doctor)
-              </button>
-            </div>
-          </div>
-        </header>
-        <main className="main-content">
-          <div className="container">
-            <DoctorDashboard user={user} />
-          </div>
+      <div className="min-h-screen bg-background">
+        <Header role="Doctor" />
+        <main className="p-6 max-w-[1400px] mx-auto">
+          <DoctorDashboard user={user} />
         </main>
       </div>
     )
@@ -125,87 +121,46 @@ function App() {
   // Patient View
   if (user?.role === 'patient') {
     return (
-      <div className="app-container">
-        <header className="app-header">
-          <div className="header-content">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-              <h1 className="app-title">MedX</h1>
-              <button
-                onClick={() => { setUser(null); setShowLanding(true); }}
-                style={{
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  color: 'var(--danger)',
-                  border: '1px solid rgba(239, 68, 68, 0.2)',
-                  padding: '0.5rem 1rem',
-                  fontSize: '0.875rem'
-                }}
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </header>
-        <main className="main-content">
-          <div className="container">
-            <PatientDashboard user={user} setUser={setUser} />
-          </div>
+      <div className="min-h-screen bg-background">
+        <Header role="Patient" />
+        <main className="p-6 max-w-[1400px] mx-auto">
+          <PatientDashboard user={user} setUser={setUser} />
         </main>
       </div>
     )
   }
 
+  // Default / Dashboard View (Legacy or General)
   return (
-    <div className="app-container">
-      <header className="app-header">
-        <div className="header-content">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-            <h1 className="app-title">MedX {user ? `| ${user.user_name}` : ''}</h1>
-            <button
-              onClick={() => { setUser(null); setShowLanding(true); }}
-              style={{
-                background: 'rgba(239, 68, 68, 0.1)',
-                color: 'var(--danger)',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
-                padding: '0.5rem 1rem',
-                fontSize: '0.875rem'
-              }}
-            >
-              Logout
-            </button>
-          </div>
-          <div className="service-status">
-            <div className="status-indicator">
-              <div className={`status-dot ${serviceStatus.patient}`}></div>
-              <span>Patient</span>
-            </div>
-            <div className="status-indicator">
-              <div className={`status-dot ${serviceStatus.clinical}`}></div>
-              <span>Clinical</span>
-            </div>
-            <div className="status-indicator">
-              <div className={`status-dot ${serviceStatus.ai}`}></div>
-              <span>AI</span>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background flex flex-col">
+      <Header role="Dashboard" />
 
-      <nav className="nav-tabs">
-        <div className="tabs-container">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              {tab.label}
-            </button>
-          ))}
+      {/* Navigation Tabs */}
+      <div className="border-b border-border bg-white/50 backdrop-blur-sm">
+        <div className="flex items-center gap-1 overflow-x-auto px-6 py-2 max-w-[1400px] mx-auto no-scrollbar">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`
+                  flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap
+                  ${activeTab === tab.id
+                    ? 'bg-primary text-primary-foreground shadow-md'
+                    : 'text-muted-foreground hover:bg-secondary hover:text-foreground'}
+                `}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            )
+          })}
         </div>
-      </nav>
+      </div>
 
-      <main className="main-content">
-        <div className="container">
+      <main className="flex-1 p-6 max-w-[1400px] mx-auto w-full">
+        <div className="fade-in">
           <ActiveComponent />
         </div>
       </main>
