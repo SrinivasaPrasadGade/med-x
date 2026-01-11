@@ -91,7 +91,18 @@ if DATABASE_URL:
 else:
     # Fallback to SQLite
     print("Warning: DATABASE_URL not found. Using local SQLite database.")
-    SQLALCHEMY_DATABASE_URL = "sqlite:///./users.db"
+    
+    db_path = "./users.db"
+    # Check if current directory is writable (needed for Vercel/Serverless)
+    try:
+        with open("./.write_test", "w") as f:
+            f.write("test")
+        os.remove("./.write_test")
+    except OSError:
+        print("Current directory is read-only. Using /tmp/users.db")
+        db_path = "/tmp/users.db"
+
+    SQLALCHEMY_DATABASE_URL = f"sqlite:///{db_path}"
     engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
     
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
