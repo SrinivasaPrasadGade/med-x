@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { api } from '../api'
+import { FileText, Search, Shield, ChevronDown, ChevronUp, AlertTriangle, CheckCircle, Activity, Info, FileJson } from 'lucide-react'
 
 export default function ClinicalNoteAnalyzer() {
     const [formData, setFormData] = useState({
@@ -10,6 +11,7 @@ export default function ClinicalNoteAnalyzer() {
     const [result, setResult] = useState(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
+    const [showRawFhir, setShowRawFhir] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -64,413 +66,293 @@ export default function ClinicalNoteAnalyzer() {
     }
 
     return (
-        <div className="fade-in" style={{ paddingBottom: '4rem', maxWidth: '1200px', margin: '0 auto', textAlign: 'left' }}>
-            <div className="page-header" style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                <h1 className="page-title">Clinical Note Analyzer</h1>
-                <p className="page-description" style={{ maxWidth: '600px', margin: '0 auto' }}>
-                    Extract medical entities, conditions, medications, and generate FHIR resources from clinical notes
+        <div className="animate-fade-in max-w-5xl mx-auto pb-16">
+            <div className="text-center mb-10 space-y-4">
+                <h1 className="text-4xl font-bold tracking-tight text-foreground">Clinical Note Analyzer</h1>
+                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                    Extract medical entities, conditions, medications, and generate FHIR resources from clinical notes using advanced AI.
                 </p>
             </div>
 
-            <div className="glass-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
-                <form onSubmit={handleSubmit} className="form-container">
-                    <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
-                        <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            <label htmlFor="patientId" style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-dim)' }}>Patient ID *</label>
-                            <input
-                                id="patientId"
-                                type="text"
-                                required
-                                placeholder="e.g., PT-12345"
-                                value={formData.patientId}
-                                onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem 1rem',
-                                    borderRadius: '12px',
-                                    border: '1px solid #e5e7eb',
-                                    backgroundColor: 'white',
-                                    fontSize: '1rem'
-                                }}
-                            />
+            <div className="bg-white/50 backdrop-blur-sm rounded-3xl border border-white/20 p-6 md:p-8 shadow-sm mb-8">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label htmlFor="patientId" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                                Patient ID <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <input
+                                    id="patientId"
+                                    type="text"
+                                    required
+                                    placeholder="e.g., PT-12345"
+                                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                    value={formData.patientId}
+                                    onChange={(e) => setFormData({ ...formData, patientId: e.target.value })}
+                                />
+                            </div>
                         </div>
 
-                        <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            <label htmlFor="noteDate" style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-dim)' }}>Note Date</label>
+                        <div className="space-y-2">
+                            <label htmlFor="noteDate" className="text-sm font-semibold text-foreground">Note Date</label>
                             <input
                                 id="noteDate"
                                 type="date"
+                                className="w-full px-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                                 value={formData.noteDate}
                                 onChange={(e) => setFormData({ ...formData, noteDate: e.target.value })}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem 1rem',
-                                    borderRadius: '12px',
-                                    border: '1px solid #e5e7eb',
-                                    backgroundColor: 'white',
-                                    fontSize: '1rem'
-                                }}
                             />
                         </div>
                     </div>
 
-                    <div className="form-group" style={{ marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label htmlFor="noteText" style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-dim)' }}>Clinical Note *</label>
+                    <div className="space-y-2">
+                        <label htmlFor="noteText" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                            Clinical Note <span className="text-red-500">*</span>
+                        </label>
                         <textarea
                             id="noteText"
                             required
-                            placeholder="Enter clinical note text here... 
-
-Example:
-Patient presents with chest pain and shortness of breath. History of hypertension. 
-Prescribed Lisinopril 10mg daily and Aspirin 81mg daily."
+                            placeholder="Enter clinical note text here...&#10;Example: Patient presents with chest pain..."
+                            className="w-full h-48 px-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none text-base leading-relaxed"
                             value={formData.noteText}
                             onChange={(e) => setFormData({ ...formData, noteText: e.target.value })}
-                            style={{
-                                width: '100%',
-                                minHeight: '200px',
-                                padding: '1rem',
-                                borderRadius: '16px',
-                                border: '1px solid #e5e7eb',
-                                backgroundColor: 'white',
-                                fontSize: '1rem',
-                                lineHeight: '1.6',
-                                resize: 'vertical'
-                            }}
                         />
                     </div>
 
-                    <div style={{ display: 'flex', gap: '1rem' }}>
+                    <div className="flex flex-col sm:flex-row gap-4">
                         <button
                             type="submit"
-                            className="btn-primary"
                             disabled={loading}
-                            style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
+                            className="flex-1 py-3 bg-primary text-primary-foreground font-bold rounded-xl hover:shadow-lg hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
                         >
-                            {loading ? 'Processing...' : <><span style={{ fontSize: '1.2em' }}>🔍</span> Analyze Clinical Note</>}
+                            {loading ? <div className="animate-spin text-xl">⟳</div> : <Search className="w-5 h-5" />}
+                            {loading ? 'Analyzing...' : 'Analyze Clinical Note'}
                         </button>
 
                         <button
                             type="button"
                             onClick={handleDeIdentify}
-                            style={{
-                                padding: '0.75rem 1.5rem',
-                                borderRadius: '999px',
-                                border: '1px solid #e5e7eb',
-                                background: 'white',
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem'
-                            }}
                             disabled={loading || !formData.noteText}
+                            className="px-8 py-3 bg-white border border-border text-foreground font-semibold rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                         >
-                            <span style={{ fontSize: '1.2em' }}>🛡️</span> De-identify (HIPAA)
+                            <Shield className="w-5 h-5" /> De-identify (HIPAA)
                         </button>
                     </div>
                 </form>
 
                 {error && (
-                    <div className="error-message" style={{
-                        marginTop: '1.5rem',
-                        padding: '1rem',
-                        borderRadius: '12px',
-                        backgroundColor: '#FEE2E2',
-                        color: '#991B1B',
-                        border: '1px solid #FECACA'
-                    }}>
-                        <strong>Error:</strong> {error}
-                    </div>
-                )}
-
-                {result && (
-                    <div className="result-section fade-in" style={{ marginTop: '3rem', textAlign: 'left' }}>
-                        <h3 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', borderBottom: '2px solid var(--primary)', paddingBottom: '0.5rem', display: 'inline-block' }}>Analysis Results</h3>
-
-                        {/* Clinical Summary */}
-                        {result.clinical_summary && (
-                            <div style={{
-                                padding: '1.5rem',
-                                marginBottom: '2rem',
-                                background: '#EFF6FF',
-                                border: '1px solid #DBEAFE',
-                                borderRadius: '16px'
-                            }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                                    <span style={{ fontSize: '1.5rem' }}>📋</span>
-                                    <h4 style={{ margin: 0, color: '#1E40AF', fontSize: '1.1rem' }}>Professional Summary</h4>
-                                </div>
-                                <p style={{ lineHeight: '1.6', color: '#1F2937', fontSize: '1.05rem', margin: 0 }}>
-                                    {result.clinical_summary}
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Extracted Entities */}
-                        {result.extracted_entities && (
-                            <div style={{ marginBottom: '3rem' }}>
-                                <h4 style={{ marginBottom: '1.5rem', fontSize: '1.25rem' }}>Medical Intelligence Extracted</h4>
-
-                                {/* Conditions */}
-                                {result.extracted_entities.conditions?.length > 0 && (
-                                    <div style={{ marginBottom: '2rem' }}>
-                                        <h5 style={{ color: '#6B7280', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>Conditions</h5>
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
-                                            {result.extracted_entities.conditions.map((cond, i) => (
-                                                <div key={i} style={{
-                                                    padding: '1rem',
-                                                    background: 'white',
-                                                    border: '1px solid #E5E7EB',
-                                                    borderRadius: '12px',
-                                                    boxShadow: '0 2px 5px rgba(0,0,0,0.02)'
-                                                }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                                        <strong style={{ fontSize: '1.1rem' }}>{cond.clinical_text}</strong>
-                                                        <span className="badge" style={{ backgroundColor: '#D1FAE5', color: '#065F46' }}>{cond.confidence}%</span>
-                                                    </div>
-                                                    <div style={{ fontSize: '0.85rem', color: '#6B7280' }}>
-                                                        <span style={{ fontWeight: 600 }}>ICD-10:</span> {cond.icd_10} &bull; <span style={{ textTransform: 'capitalize' }}>{cond.severity}</span>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Medications */}
-                                {result.extracted_entities.medications?.length > 0 && (
-                                    <div style={{ marginBottom: '2rem' }}>
-                                        <h5 style={{ color: '#6B7280', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>Medications</h5>
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
-                                            {result.extracted_entities.medications.map((med, i) => (
-                                                <div key={i} style={{
-                                                    padding: '1rem',
-                                                    background: 'white',
-                                                    border: '1px solid #E5E7EB',
-                                                    borderRadius: '12px',
-                                                    boxShadow: '0 2px 5px rgba(0,0,0,0.02)'
-                                                }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                                        <strong style={{ fontSize: '1.1rem' }}>{med.drug_name}</strong>
-                                                        <span className="badge" style={{ backgroundColor: '#D1FAE5', color: '#065F46' }}>{med.confidence}%</span>
-                                                    </div>
-                                                    <div style={{ fontSize: '0.85rem', color: '#6B7280' }}>
-                                                        {med.dosage} {med.frequency}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Clinical Validations */}
-                        {result.clinical_validations && (
-                            <div style={{ marginBottom: '3rem' }}>
-                                <h4 style={{ marginBottom: '1.5rem', fontSize: '1.25rem' }}>Clinical Validations & Safety</h4>
-                                {result.clinical_validations.safety_flags?.yellow_flags?.length > 0 ? (
-                                    <div style={{ padding: '1rem', background: '#FFFBEB', border: '1px solid #FCD34D', borderRadius: '12px' }}>
-                                        <strong style={{ color: '#92400E', display: 'block', marginBottom: '0.5rem' }}>Warnings:</strong>
-                                        <ul style={{ margin: 0, paddingLeft: '1.5rem', color: '#92400E' }}>
-                                            {result.clinical_validations.safety_flags.yellow_flags.map((f, i) => <li key={i}>{f}</li>)}
-                                        </ul>
-                                    </div>
-                                ) : (
-                                    <p style={{ color: '#059669', fontStyle: 'italic' }}>No safety flags detected.</p>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Adherence Insights */}
-                        {result.adherence_insights && (
-                            <div style={{ marginBottom: '3rem' }}>
-                                <h4 style={{ marginBottom: '1.5rem', fontSize: '1.25rem' }}>Adherence Insights</h4>
-                                <div style={{
-                                    padding: '1.5rem',
-                                    background: 'white',
-                                    border: '1px solid #E5E7EB',
-                                    borderLeft: '4px solid var(--primary)',
-                                    borderRadius: '8px'
-                                }}>
-                                    <p style={{ marginBottom: '0.5rem' }}>
-                                        <strong>Complexity Score:</strong> {result.adherence_insights.complexity_score}/5
-                                    </p>
-                                    {result.adherence_insights.barriers_identified?.length > 0 && (
-                                        <p style={{ margin: 0 }}>
-                                            <strong>Identified Barriers:</strong> {result.adherence_insights.barriers_identified.join(', ')}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* FHIR Bundle Visualizer */}
-                        {result.fhir_resources && (
-                            <div style={{ marginBottom: '3rem' }}>
-                                <h4 style={{ marginBottom: '1.5rem', fontSize: '1.25rem' }}>FHIR R4 Interoperability Data</h4>
-
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-                                    {result.fhir_resources.entry?.map((entry, i) => {
-                                        const res = entry.resource;
-                                        let icon = '📄';
-                                        let title = res.resourceType;
-                                        let details = res.id;
-                                        let color = '#F3F4F6';
-                                        let txColor = '#374151';
-
-                                        // Customize based on Resource Type
-                                        if (res.resourceType === 'Condition') {
-                                            icon = '🩺';
-                                            title = 'Condition';
-                                            details = res.code?.text || res.code?.coding?.[0]?.display || 'Unknown Condition';
-                                            color = '#FEF2F2'; // Light Red
-                                            txColor = '#991B1B';
-                                        } else if (res.resourceType === 'MedicationStatement' || res.resourceType === 'MedicationRequest') {
-                                            icon = '💊';
-                                            title = 'Medication';
-                                            details = res.medicationCodeableConcept?.text || res.medicationCodeableConcept?.coding?.[0]?.display || 'Unknown Medication';
-                                            color = '#EFF6FF'; // Light Blue
-                                            txColor = '#1E40AF';
-                                        } else if (res.resourceType === 'Patient') {
-                                            icon = '👤';
-                                            title = 'Patient';
-                                            details = `ID: ${res.id}`;
-                                            color = '#F0FDF4'; // Light Green
-                                            txColor = '#166534';
-                                        } else if (res.resourceType === 'AllergyIntolerance') {
-                                            icon = '⚠️';
-                                            title = 'Allergy';
-                                            details = res.code?.text || 'Unknown Allergy';
-                                            color = '#FFFBEB'; // Light Yellow
-                                            txColor = '#92400E';
-                                        } else if (res.resourceType === 'Observation') {
-                                            icon = '🔬';
-                                            title = 'Observation';
-                                            details = res.code?.text || 'Lab/Vital';
-                                            color = '#F5F3FF'; // Light Purple
-                                            txColor = '#5B21B6';
-                                        }
-
-                                        return (
-                                            <div key={i} style={{
-                                                display: 'flex',
-                                                alignItems: 'flex-start',
-                                                gap: '1rem',
-                                                padding: '1rem',
-                                                backgroundColor: color,
-                                                borderRadius: '12px',
-                                                border: '1px solid transparent',
-                                                borderColor: color === '#F3F4F6' ? '#E5E7EB' : 'transparent'
-                                            }}>
-                                                <div style={{ fontSize: '1.5rem', lineHeight: 1 }}>{icon}</div>
-                                                <div>
-                                                    <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, color: txColor, opacity: 0.8, marginBottom: '0.25rem' }}>
-                                                        {title}
-                                                    </div>
-                                                    <div style={{ fontWeight: 600, color: '#1F2937', fontSize: '0.95rem' }}>
-                                                        {details}
-                                                    </div>
-                                                    <div style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: '0.25rem', fontFamily: 'monospace' }}>
-                                                        ID: {res.id?.slice(0, 8)}...
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                <details style={{
-                                    background: '#1F2937',
-                                    borderRadius: '12px',
-                                    overflow: 'hidden'
-                                }}>
-                                    <summary style={{
-                                        padding: '0.75rem 1rem',
-                                        cursor: 'pointer',
-                                        color: '#D1D5DB',
-                                        fontWeight: 500,
-                                        fontSize: '0.9rem',
-                                        userSelect: 'none',
-                                        outline: 'none'
-                                    }}>
-                                        View Raw FHIR JSON
-                                    </summary>
-                                    <div style={{
-                                        padding: '1rem',
-                                        borderTop: '1px solid #374151',
-                                        overflowX: 'auto'
-                                    }}>
-                                        <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: '0.8rem', color: '#F9FAFB' }}>
-                                            {JSON.stringify(result.fhir_resources, null, 2)}
-                                        </pre>
-                                    </div>
-                                </details>
-                            </div>
-                        )}
-
-                        {/* De-identified Text */}
-                        {result.deIdentifiedText && (
-                            <div style={{ marginBottom: '3rem' }}>
-                                <h4 style={{ marginBottom: '1.5rem', fontSize: '1.25rem' }}>De-identified Note (HIPAA Safe Harbor)</h4>
-                                <div style={{
-                                    padding: '1.5rem',
-                                    background: '#F0FDF4',
-                                    border: '1px solid #BBF7D0',
-                                    borderRadius: '12px',
-                                    color: '#166534'
-                                }}>
-                                    <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', fontSize: '1rem', margin: 0 }}>
-                                        {result.deIdentifiedText}
-                                    </pre>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Adherence Coaching */}
-                        {result.coaching && (
-                            <div style={{ marginBottom: '2rem' }}>
-                                <h4 style={{ marginBottom: '1.5rem', fontSize: '1.25rem' }}>Personalized Patient Coaching</h4>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-                                    {result.coaching.map((card, i) => (
-                                        <div key={i} style={{
-                                            padding: '1.5rem',
-                                            background: 'white',
-                                            border: '1px solid #E5E7EB',
-                                            borderRadius: '16px',
-                                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
-                                            borderLeft: `5px solid ${card.importance === 'high' ? '#EF4444' : '#F59E0B'}`
-                                        }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                                <span style={{ fontWeight: 700, color: '#1F2937', fontSize: '1.1rem' }}>
-                                                    {card.medication}
-                                                </span>
-                                                <span style={{
-                                                    fontSize: '0.75rem',
-                                                    fontWeight: 700,
-                                                    padding: '0.25rem 0.75rem',
-                                                    borderRadius: '999px',
-                                                    backgroundColor: card.importance === 'high' ? '#FEE2E2' : '#FEF3C7',
-                                                    color: card.importance === 'high' ? '#991B1B' : '#92400E'
-                                                }}>
-                                                    {card.importance.toUpperCase()} PRIORITY
-                                                </span>
-                                            </div>
-                                            <p style={{ fontSize: '0.95rem', color: '#4B5563', marginBottom: '1rem', lineHeight: 1.5 }}>
-                                                {card.message}
-                                            </p>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#059669', fontWeight: 600 }}>
-                                                <span>🕒</span> {card.timing}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                    <div className="mt-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-700 flex items-start gap-3">
+                        <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <strong className="font-bold block">Error Processing Note</strong>
+                            <p>{error}</p>
+                        </div>
                     </div>
                 )}
             </div>
+
+            {result && (
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
+                    <div className="flex items-center gap-4 border-b border-border pb-4">
+                        <h2 className="text-2xl font-bold text-foreground">Analysis Results</h2>
+                        <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wide">
+                            AI Processing Complete
+                        </span>
+                    </div>
+
+                    {/* Clinical Summary */}
+                    {result.clinical_summary && (
+                        <div className="bg-blue-50/50 rounded-2xl border border-blue-100 p-6">
+                            <div className="flex items-center gap-2 mb-3">
+                                <FileText className="w-5 h-5 text-blue-700" />
+                                <h3 className="text-lg font-bold text-blue-800">Professional Summary</h3>
+                            </div>
+                            <p className="text-blue-900 leading-relaxed text-lg">
+                                {result.clinical_summary}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Extracted Entities */}
+                    {result.extracted_entities && (
+                        <div className="space-y-6">
+                            {/* Conditions */}
+                            {result.extracted_entities.conditions?.length > 0 && (
+                                <div>
+                                    <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-3">Conditions identified</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {result.extracted_entities.conditions.map((cond, i) => (
+                                            <div key={i} className="bg-white p-5 rounded-xl border border-border shadow-sm hover:shadow-md transition-all">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <strong className="text-lg font-semibold text-foreground">{cond.clinical_text}</strong>
+                                                    <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-100 text-green-700">
+                                                        {cond.confidence}%
+                                                    </span>
+                                                </div>
+                                                <div className="text-sm text-muted-foreground flex flex-col gap-1">
+                                                    <span>ICD-10: <span className="font-mono text-foreground bg-gray-100 px-1 rounded">{cond.icd_10}</span></span>
+                                                    <span className="capitalize text-yellow-600 font-medium">{cond.severity}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Medications */}
+                            {result.extracted_entities.medications?.length > 0 && (
+                                <div>
+                                    <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-3">Medications identified</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {result.extracted_entities.medications.map((med, i) => (
+                                            <div key={i} className="bg-white p-5 rounded-xl border border-border shadow-sm hover:shadow-md transition-all">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <strong className="text-lg font-semibold text-foreground">{med.drug_name}</strong>
+                                                    <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-100 text-green-700">
+                                                        {med.confidence}%
+                                                    </span>
+                                                </div>
+                                                <div className="text-sm text-muted-foreground">
+                                                    {med.dosage} • {med.frequency}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Safety Flags */}
+                    {result.clinical_validations && (
+                        <div>
+                            <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-3">Clinical Safety</h4>
+                            {result.clinical_validations.safety_flags?.yellow_flags?.length > 0 ? (
+                                <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-4">
+                                    <div className="flex items-center gap-2 mb-2 text-yellow-800 font-bold">
+                                        <AlertTriangle className="w-5 h-5" /> Safety Warnings Detected
+                                    </div>
+                                    <ul className="list-disc list-inside text-yellow-900 space-y-1 ml-1">
+                                        {result.clinical_validations.safety_flags.yellow_flags.map((f, i) => (
+                                            <li key={i}>{f}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ) : (
+                                <div className="bg-green-50 rounded-xl border border-green-200 p-4 flex items-center gap-3 text-green-800 font-medium">
+                                    <CheckCircle className="w-5 h-5" /> No safety flags detected.
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Adherence Insights */}
+                    {result.adherence_insights && (
+                        <div className="bg-white rounded-2xl border border-border p-6 shadow-sm">
+                            <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                <Activity className="w-5 h-5 text-primary" /> Adherence Insights
+                            </h4>
+                            <div className="flex flex-col gap-4">
+                                <div>
+                                    <div className="text-sm text-muted-foreground font-medium mb-1">Regimen Complexity</div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex-1 h-3 bg-secondary rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-gradient-to-r from-green-500 to-red-500"
+                                                style={{ width: `${(result.adherence_insights.complexity_score / 5) * 100}%` }}
+                                            />
+                                        </div>
+                                        <span className="font-bold text-foreground">{result.adherence_insights.complexity_score}/5</span>
+                                    </div>
+                                </div>
+                                {result.adherence_insights.barriers_identified?.length > 0 && (
+                                    <div className="bg-secondary/30 rounded-xl p-4">
+                                        <div className="text-sm font-bold text-foreground mb-2">Identified Barriers</div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {result.adherence_insights.barriers_identified.map((b, i) => (
+                                                <span key={i} className="px-3 py-1 rounded-lg bg-white border border-border text-sm font-medium text-muted-foreground">
+                                                    {b}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* FHIR Bundle */}
+                    {result.fhir_resources && (
+                        <div className="space-y-4">
+                            <h4 className="text-lg font-bold flex items-center gap-2">
+                                <FileJson className="w-5 h-5 text-primary" /> FHIR Interoperability Data
+                            </h4>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {result.fhir_resources.entry?.map((entry, i) => {
+                                    const res = entry.resource;
+                                    let typeConfig = { icon: '📄', color: 'bg-gray-100 text-gray-800', border: 'border-gray-200' };
+
+                                    if (res.resourceType === 'Condition') typeConfig = { icon: '🩺', color: 'bg-red-50 text-red-900', border: 'border-red-100' };
+                                    else if (['MedicationStatement', 'MedicationRequest'].includes(res.resourceType)) typeConfig = { icon: '💊', color: 'bg-blue-50 text-blue-900', border: 'border-blue-100' };
+                                    else if (res.resourceType === 'Patient') typeConfig = { icon: '👤', color: 'bg-green-50 text-green-900', border: 'border-green-100' };
+                                    else if (res.resourceType === 'AllergyIntolerance') typeConfig = { icon: '⚠️', color: 'bg-yellow-50 text-yellow-900', border: 'border-yellow-100' };
+
+                                    return (
+                                        <div key={i} className={`p-4 rounded-xl border ${typeConfig.color} ${typeConfig.border} flex items-start gap-3`}>
+                                            <span className="text-2xl">{typeConfig.icon}</span>
+                                            <div className="overflow-hidden">
+                                                <div className="text-xs font-bold uppercase opacity-70 mb-0.5">{res.resourceType}</div>
+                                                <div className="font-semibold truncate">
+                                                    {res.code?.text || res.medicationCodeableConcept?.text || (res.resourceType === 'Patient' ? `ID: ${res.id}` : 'N/A')}
+                                                </div>
+                                                <div className="text-xs opacity-60 font-mono mt-1 truncate">ID: {res.id}</div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <button
+                                onClick={() => setShowRawFhir(!showRawFhir)}
+                                className="flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+                            >
+                                {showRawFhir ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                {showRawFhir ? 'Hide Raw JSON' : 'View Raw FHIR JSON'}
+                            </button>
+
+                            {showRawFhir && (
+                                <div className="bg-gray-900 rounded-xl p-6 overflow-hidden">
+                                    <div className="flex items-start gap-3 mb-4 p-4 rounded-lg bg-blue-900/20 border border-blue-500/20 text-blue-200 text-sm">
+                                        <Info className="w-5 h-5 flex-shrink-0 text-blue-400" />
+                                        <div>
+                                            <strong className="text-blue-400 block mb-1">About FHIR R4</strong>
+                                            This is the standard code used by hospitals and health apps to exchange patient data safely and accurately.
+                                        </div>
+                                    </div>
+                                    <pre className="text-xs font-mono text-gray-300 overflow-x-auto custom-scrollbar">
+                                        {JSON.stringify(result.fhir_resources, null, 2)}
+                                    </pre>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* De-identified Text */}
+                    {result.deIdentifiedText && (
+                        <div className="bg-green-50 rounded-2xl border border-green-100 p-6">
+                            <h4 className="text-lg font-bold text-green-900 mb-4 flex items-center gap-2">
+                                <Shield className="w-5 h-5" /> De-identified Note
+                            </h4>
+                            <pre className="whitespace-pre-wrap font-sans text-green-900 bg-transparent">
+                                {result.deIdentifiedText}
+                            </pre>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     )
 }
