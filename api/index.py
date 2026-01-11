@@ -95,15 +95,21 @@ if DATABASE_URL:
 else:
     # Fallback to SQLite
     print("Warning: DATABASE_URL not found. Using local SQLite database.")
-    db_path = "./users.db"
-    # Check if current directory is writable (needed for Vercel/Serverless)
-    try:
-        with open("./.write_test", "w") as f:
-            f.write("test")
-        os.remove("./.write_test")
-    except OSError:
-        print("Current directory is read-only. Using /tmp/users.db")
+    
+    # Check if running on Vercel or Read-only fs
+    if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        print("Detected Serverless Environment. Using /tmp/users.db")
         db_path = "/tmp/users.db"
+    else:
+        db_path = "./users.db"
+        # Check if current directory is writable
+        try:
+            with open("./.write_test", "w") as f:
+                f.write("test")
+            os.remove("./.write_test")
+        except OSError:
+            print("Current directory is read-only. Using /tmp/users.db")
+            db_path = "/tmp/users.db"
 
     SQLALCHEMY_DATABASE_URL = f"sqlite:///{db_path}"
     engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
@@ -302,25 +308,45 @@ async def register_org(org: OrgCreate, db: Session = Depends(get_db)):
 
 @app.post("/api/login")
 async def login(user: UserLogin, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.email == user.email).first()
-    if not db_user or not verify_password(user.password, db_user.hashed_password):
-        raise HTTPException(status_code=400, detail="Invalid email or password")
-    
-    org_name = None
-    if db_user.organization_id:
-        org = db.query(Organization).filter(Organization.id == db_user.organization_id).first()
-        if org:
-            org_name = org.name
+    try:
+        # Check for startup error
+        if startup_error:
+            raise HTTPException(status_code=500, detail=f"Database startup failed: {startup_error}")
 
-    return {
-        "access_token": "fake-jwt-token-for-demo", 
-        "token_type": "bearer",
-        "user_name": db_user.full_name or db_user.email.split('@')[0],
-        "user_id": db_user.id,
-        "role": db_user.role,
-        "organization_name": org_name,
-        "organization_id": db_user.organization_id
-    }
+        db_user = db.query(User).filter(User.email == user.email).first()
+        if not db_user or not verify_password(user.password, db_user.hashed_password):
+            # For demo: if no user exists, maybe auto-create one? 
+            # No, let's stick to error. BUT, if it is a fresh /tmp DB, there are no users.
+            # Let's verify if there are ANY users.
+            user_count = db.query(User).count()
+            if user_count == 0:
+                # If DB is empty (fresh start), log this specific case
+                print("Database is empty. No users found.")
+                raise HTTPException(status_code=401, detail="System Reset: No users in database. Please Register.")
+            
+            raise HTTPException(status_code=400, detail="Invalid email or password")
+        
+        org_name = None
+        if db_user.organization_id:
+            org = db.query(Organization).filter(Organization.id == db_user.organization_id).first()
+            if org:
+                org_name = org.name
+
+        return {
+            "access_token": "fake-jwt-token-for-demo", 
+            "token_type": "bearer",
+            "user_name": db_user.full_name or db_user.email.split('@')[0],
+            "user_id": db_user.id,
+            "role": db_user.role,
+            "organization_name": org_name,
+            "organization_id": db_user.organization_id
+        }
+    except Exception as e:
+        print(f"Login Error: {str(e)}")
+        traceback.print_exc()
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Internal Login Error: {str(e)}")
 
 @app.post("/api/org/doctors")
 async def add_doctor(doctor: OrgDoctorCreate, db: Session = Depends(get_db)):
