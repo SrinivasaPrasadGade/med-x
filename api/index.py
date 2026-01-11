@@ -6,6 +6,7 @@ import os
 import json
 import random
 import google.generativeai as genai
+import traceback
 
 from dotenv import load_dotenv
 
@@ -152,7 +153,13 @@ class Appointment(Base):
     doctor = relationship("User", foreign_keys=[doctor_id], back_populates="doctor_appointments")
     patient = relationship("User", foreign_keys=[patient_id], back_populates="patient_appointments")
 
-Base.metadata.create_all(bind=engine)
+
+startup_error = None
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    startup_error = f"Database startup error: {str(e)}\n{traceback.format_exc()}"
+    print(startup_error)
 
 # Security (Using bcrypt directly)
 def verify_password(plain_password, hashed_password):
@@ -537,8 +544,23 @@ async def update_patient_profile(profile: PatientProfileUpdate, patient_id: int,
 @app.get("/api/clinical/health")
 @app.get("/api/patient/health")
 @app.get("/api/ai/health")
+@app.get("/api/ai/health")
 async def health_check():
-    return {"status": "healthy", "service": "consolidated-api"}
+    global startup_error
+    if startup_error:
+        return {"status": "error", "message": "Startup failed", "details": startup_error}
+    
+    # Optional: Check DB connection
+    db_status = "connected"
+    try:
+        # Simple query to check connection
+        with engine.connect() as connection:
+            from sqlalchemy import text
+            connection.execute(text("SELECT 1"))
+    except Exception as e:
+        db_status = f"disconnected: {str(e)}"
+
+    return {"status": "healthy", "service": "consolidated-api", "database": db_status}
 
 @app.get("/api/audit-log")
 async def get_audit_logs():
