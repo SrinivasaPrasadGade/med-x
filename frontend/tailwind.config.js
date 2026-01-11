@@ -49,12 +49,8 @@ export default {
             },
             fontFamily: {
                 sans: [
-                    "SF Pro Display",
-                    "-apple-system",
-                    "BlinkMacSystemFont",
-                    "Segoe UI",
-                    "Roboto",
-                    "sans-serif",
+                    '"Old Standard TT"',
+                    "serif",
                 ],
             },
             animation: {

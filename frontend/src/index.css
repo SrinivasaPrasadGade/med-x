@@ -6,8 +6,10 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;    /* Soft white/blue tint */
-    --foreground: 222 47% 11%;    /* Deep slate */
+    --background: 210 40% 98%;
+    /* Soft white/blue tint */
+    --foreground: 222 47% 11%;
+    /* Deep slate */
 
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -15,7 +17,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 221 83% 53%;       /* Bright Premium Blue */
+    --primary: 221 83% 53%;
+    /* Bright Premium Blue */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -72,11 +75,13 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+    font-family: "Old Standard TT", serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
-  
+
   /* Smooth scrolling */
   html {
     scroll-behavior: smooth;
@@ -87,11 +92,11 @@
     width: 8px;
     height: 8px;
   }
-  
+
   ::-webkit-scrollbar-track {
     @apply bg-transparent;
   }
-  
+
   ::-webkit-scrollbar-thumb {
     @apply bg-muted-foreground/20 rounded-full transition-colors hover:bg-muted-foreground/40;
   }
