@@ -80,8 +80,20 @@ from fastapi import Depends
 # ... (Previous imports)
 
 # Database Setup
-SQLALCHEMY_DATABASE_URL = "sqlite:///./users.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+# Database Setup
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL:
+    # Handle "postgres://" vs "postgresql://" for SQLAlchemy
+    if DATABASE_URL.startswith("postgres://"):
+         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    engine = create_engine(DATABASE_URL)
+else:
+    # Fallback to SQLite
+    print("Warning: DATABASE_URL not found. Using local SQLite database.")
+    SQLALCHEMY_DATABASE_URL = "sqlite:///./users.db"
+    engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+    
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
