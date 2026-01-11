@@ -140,6 +140,30 @@ class User(Base):
     doctor_appointments = relationship("Appointment", foreign_keys="[Appointment.doctor_id]", back_populates="doctor")
     patient_appointments = relationship("Appointment", foreign_keys="[Appointment.patient_id]", back_populates="patient")
 
+# Auto-Migration for Schema Updates
+def run_migrations():
+    try:
+        with engine.connect() as conn:
+            from sqlalchemy import text
+            # Postgres: Add columns if they don't exist
+            # Note: valid for Postgres 9.6+, safe to fail if column exists on older ones
+            try:
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS blood_type VARCHAR"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS allergies VARCHAR"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS dob VARCHAR"))
+                
+                # Create documents table if not exists (create_all handles this usually, but good to be sure for relationships)
+                # Actually create_all below handles new tables. We just need to patch existing ones.
+                conn.commit()
+                print("Schema migration (columns added) successful.")
+            except Exception as e:
+                print(f"Migration warning: {e}")
+                pass
+    except Exception as outer_e:
+        print(f"DB Connection during migration failed: {outer_e}")
+
+run_migrations()
+
 class Organization(Base):
     __tablename__ = "organizations"
     id = Column(Integer, primary_key=True, index=True)
