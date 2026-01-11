@@ -55,6 +55,22 @@ export default function PrescriptionScanner() {
         if (fileInputRef.current) fileInputRef.current.value = ''
     }
 
+    const [savedMeds, setSavedMeds] = useState(new Set())
+
+    const handleAddMedication = async (med) => {
+        try {
+            await api.addMedication({
+                name: med.name,
+                dosage: med.dosage || 'As directed',
+                frequency: med.frequency || 'As directed'
+            })
+            setSavedMeds(prev => new Set([...prev, med.name]))
+        } catch (err) {
+            console.error(err)
+            // Optional: show error toast
+        }
+    }
+
     return (
         <div className="animate-fade-in max-w-7xl mx-auto pb-16">
             <div className="text-center mb-10 space-y-4">
@@ -163,7 +179,25 @@ export default function PrescriptionScanner() {
                                                     <CheckCircle className="w-6 h-6" />
                                                 </div>
                                                 <div className="flex-1">
-                                                    <h5 className="text-lg font-bold text-foreground">{med.name}</h5>
+                                                    <div className="flex justify-between items-start">
+                                                        <h5 className="text-lg font-bold text-foreground">{med.name}</h5>
+                                                        <button
+                                                            onClick={() => handleAddMedication(med)}
+                                                            disabled={savedMeds.has(med.name)}
+                                                            className={`
+                                                                text-xs font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1
+                                                                ${savedMeds.has(med.name)
+                                                                    ? 'bg-green-100 text-green-700 cursor-default'
+                                                                    : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'}
+                                                            `}
+                                                        >
+                                                            {savedMeds.has(med.name) ? (
+                                                                <>Saved <CheckCircle className="w-3 h-3" /></>
+                                                            ) : (
+                                                                <>+ Add to Meds</>
+                                                            )}
+                                                        </button>
+                                                    </div>
                                                     <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-sm">
                                                         {med.dosage && (
                                                             <div className="text-muted-foreground">

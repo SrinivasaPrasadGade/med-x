@@ -125,6 +125,9 @@ export default function PatientDashboard({ user, setUser }) {
                 {[
                     { id: 'findCare', label: 'Find Care', icon: '🔍' },
                     { id: 'appointments', label: 'My Appointments', icon: '📅' },
+                    { id: 'medications', label: 'My Medications', icon: '💊' },
+                    { id: 'scanner', label: 'Smart Scanner', icon: '📸' },
+                    { id: 'interactions', label: 'Drug Safety', icon: '🛡️' },
                     { id: 'documents', label: 'Documents', icon: '📂' },
                     { id: 'profile', label: 'Profile', icon: '👤' },
                 ].map(tab => (
@@ -335,10 +338,23 @@ export default function PatientDashboard({ user, setUser }) {
                 )}
 
                 {/* Integration with other components */}
-                <div className="hidden">
-                    {/* Just mounting them when needed, kept logic from original but hidden div is messy. 
-                        Refactoring to render conditionally above. */}
-                </div>
+                {activeTab === 'medications' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4">
+                        <MedicationManager />
+                    </div>
+                )}
+
+                {activeTab === 'scanner' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4">
+                        <PrescriptionScanner />
+                    </div>
+                )}
+
+                {activeTab === 'interactions' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4">
+                        <DrugInteractionChecker />
+                    </div>
+                )}
             </div>
 
             {/* Modals */}

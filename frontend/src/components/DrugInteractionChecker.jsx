@@ -100,18 +100,39 @@ export default function DrugInteractionChecker() {
                             ))}
                         </div>
 
-                        <div className="pt-2 flex gap-3">
+                        <div className="pt-2 flex gap-3 flex-wrap">
                             <button
                                 type="button"
                                 onClick={addMedication}
                                 className="flex-1 py-3 px-4 bg-secondary text-foreground font-semibold rounded-xl hover:bg-secondary/80 transition-all flex items-center justify-center gap-2 text-sm"
                             >
-                                <Plus className="w-4 h-4" /> Add Drug
+                                <Plus className="w-4 h-4" /> Add Field
+                            </button>
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    setLoading(true)
+                                    try {
+                                        const meds = await api.getMedications()
+                                        if (meds && meds.length > 0) {
+                                            setMedications(meds.map(m => m.name))
+                                        } else {
+                                            setError('No saved medications found.')
+                                        }
+                                    } catch (e) {
+                                        setError('Failed to load medications.')
+                                    } finally {
+                                        setLoading(false)
+                                    }
+                                }}
+                                className="flex-1 py-3 px-4 bg-blue-50 text-blue-700 font-semibold rounded-xl hover:bg-blue-100 transition-all flex items-center justify-center gap-2 text-sm border border-blue-100"
+                            >
+                                <span className="text-lg">💊</span> Load My Meds
                             </button>
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="flex-1 py-3 px-4 bg-primary text-primary-foreground font-bold rounded-xl hover:shadow-lg hover:bg-primary/90 transition-all flex items-center justify-center gap-2 text-sm"
+                                className="flex-1 py-3 px-4 bg-primary text-primary-foreground font-bold rounded-xl hover:shadow-lg hover:bg-primary/90 transition-all flex items-center justify-center gap-2 text-sm min-w-[120px]"
                             >
                                 {loading ? 'Checking...' : 'Check Safety'}
                             </button>
