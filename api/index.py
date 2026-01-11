@@ -92,7 +92,6 @@ if DATABASE_URL:
 else:
     # Fallback to SQLite
     print("Warning: DATABASE_URL not found. Using local SQLite database.")
-    
     db_path = "./users.db"
     # Check if current directory is writable (needed for Vercel/Serverless)
     try:
