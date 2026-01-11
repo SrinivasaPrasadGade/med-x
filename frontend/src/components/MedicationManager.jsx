@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../api'
-import { Plus, Trash2, CheckCircle, XCircle, Pill, Calendar, Clock, AlertCircle } from 'lucide-react'
+import { Plus, Trash2, CheckCircle, XCircle, Pill, Calendar, Clock, AlertCircle, Activity } from 'lucide-react'
 
 export default function MedicationManager() {
     const [medications, setMedications] = useState([])
