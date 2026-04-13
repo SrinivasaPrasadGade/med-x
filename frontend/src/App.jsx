@@ -11,13 +11,28 @@ import LandingPage from './components/LandingPage'
 import OrgDashboard from './components/OrgDashboard'
 import DoctorDashboard from './components/DoctorDashboard'
 import PatientDashboard from './components/PatientDashboard'
-
+import Chatbot from './components/Chatbot'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { LogOut, Activity, LayoutDashboard, FileText, Scan, ShieldCheck, Pill } from 'lucide-react'
 
 function App() {
-  const [showLanding, setShowLanding] = useState(true)
-  const [user, setUser] = useState(null)
+  const [user, setUserState] = useState(() => {
+    const saved = localStorage.getItem('medx_user')
+    if (saved) {
+      try { return JSON.parse(saved) } catch (e) { return null }
+    }
+    return null
+  })
+  const [showLanding, setShowLanding] = useState(() => user === null)
+
+  const setUser = (newUser) => {
+    if (newUser) {
+      localStorage.setItem('medx_user', JSON.stringify(newUser))
+    } else {
+      localStorage.removeItem('medx_user')
+    }
+    setUserState(newUser)
+  }
   const [activeTab, setActiveTab] = useState('dashboard')
   const [serviceStatus, setServiceStatus] = useState({
     patient: 'checking',
@@ -108,6 +123,7 @@ function App() {
         <main className="p-6 max-w-[1400px] mx-auto">
           <OrgDashboard user={user} />
         </main>
+        <Chatbot context="Admin Dashboard" role={user.role} />
       </div>
     )
   }
@@ -120,6 +136,7 @@ function App() {
         <main className="p-6 max-w-[1400px] mx-auto">
           <DoctorDashboard user={user} />
         </main>
+        <Chatbot context="Doctor Dashboard" role={user.role} />
       </div>
     )
   }
@@ -132,6 +149,7 @@ function App() {
         <main className="p-6 max-w-[1400px] mx-auto">
           <PatientDashboard user={user} setUser={setUser} />
         </main>
+        <Chatbot context="Patient Dashboard" role={user.role} />
       </div>
     )
   }
@@ -170,6 +188,7 @@ function App() {
           <ActiveComponent />
         </div>
       </main>
+      <Chatbot context={activeTab} role={user?.role || 'Guest'} />
     </div>
   )
 }

@@ -73,6 +73,12 @@ class Medication(BaseModel):
     dosage: str
     frequency: str
 
+class ChatRequest(BaseModel):
+    message: str
+    history: List[Dict[str, str]] = []
+    context: str = ""
+    role: str = ""
+
 # Endpoints
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey, DateTime
 from datetime import datetime
@@ -837,6 +843,44 @@ async def log_adherence(data: Dict[str, Any]):
 @app.get("/api/adherence")
 async def get_adherence():
     return db.adherence
+
+@app.post("/api/chat")
+@app.post("/api/ai/chat")
+async def chat_with_website_context(req: ChatRequest):
+    import traceback
+    try:
+        if not api_key:
+            return {"response": "Mock Chatbot: The Gemini API key is not configured, but I understand you want to know about MedX features."}
+        
+        system_instruction = f"""
+You are the MedX HealthBridge AI Assistant. Your role is to help patients navigate the app and understand our features.
+The user's current context/tab is: "{req.context}".
+The user's role is: "{req.role}".
+
+KEY FEATURES OF MEDX:
+1. Dashboard (Overview): A summary of the user's ongoing health statuses and quick navigation.
+2. Clinical Intelligence (Clinical Notes Analyzer): Uses AI to parse doctor notes, extracting key medical entities.
+3. Scanner Doc (Prescription Scanner): Quickly extracts structured data from uploaded prescriptions.
+4. Safety Guard (Drug Interaction Checker): Checks medications for possible adverse interactions based on current prescriptions.
+5. Patient Care (Medication Manager): Allows patients to track and log adherence to daily medications.
+
+Keep your answers concise, helpful, and friendly. Guide the user based on their current context.
+"""
+        model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=system_instruction)
+        
+        # Build history for Gemini
+        gemini_history = []
+        for msg in req.history:
+            gemini_history.append({"role": "user" if msg["role"] == "user" else "model", "parts": [msg["content"]]})
+        
+        chat = model.start_chat(history=gemini_history)
+        
+        response = chat.send_message(req.message)
+        
+        return {"response": response.text}
+    except Exception as e:
+        traceback.print_exc()
+        return {"response": f"I encountered an error while processing your request: {str(e)}"}
 
 @app.post("/api/analyze-note")
 async def analyze_note(note: ClinicalNote):

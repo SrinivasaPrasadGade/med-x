@@ -56,6 +56,7 @@ export const api = {
     checkInteractions: (meds) => apiRequest('ai', '/check-interactions', { method: 'POST', body: JSON.stringify({ medications: meds }) }),
     deIdentify: (data) => apiRequest('ai', '/de-identify', { method: 'POST', body: JSON.stringify(data) }),
     generateCoaching: (context) => apiRequest('ai', '/generate-coaching', { method: 'POST', body: JSON.stringify(context) }),
+    sendChatMessage: (data) => apiRequest('ai', '/chat', { method: 'POST', body: JSON.stringify(data) }),
 
     // Audit Logs
     getAuditLogs: () => apiRequest('ai', '/audit-log'),
