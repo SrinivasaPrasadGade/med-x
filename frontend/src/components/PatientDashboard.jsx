@@ -4,7 +4,7 @@ import DrugInteractionChecker from './DrugInteractionChecker';
 import MedicationManager from './MedicationManager';
 import DocumentManager from './DocumentManager';
 import PrescriptionScanner from './PrescriptionScanner';
-import { Search, MapPin, Star, Calendar, Clock, FileText, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { Search, MapPin, Star, Calendar, Clock, FileText, AlertTriangle, CheckCircle, XCircle, User, Shield, Phone, Activity } from 'lucide-react';
 
 export default function PatientDashboard({ user, setUser }) {
     const [activeTab, setActiveTab] = useState('findCare');
@@ -29,7 +29,21 @@ export default function PatientDashboard({ user, setUser }) {
     const [appointments, setAppointments] = useState([]);
 
     // Profile State
-    const [profileData, setProfileData] = useState({ fullName: user.user_name, password: '' });
+    const [profileData, setProfileData] = useState({ 
+        fullName: user.user_name || '', 
+        email: user.email || '',
+        medx_id: user.medx_id || '-',
+        profilePhoto: user.profile_photo_url || null,
+        dob: user.dob || '',
+        gender: user.gender || '',
+        bloodType: user.blood_type || '',
+        contactNumber: user.contact_number || '',
+        emergencyContact: user.emergency_contact || '',
+        address: user.address || '',
+        allergies: user.allergies || '',
+        medicalHistory: user.medical_history || '',
+        password: '' 
+    });
 
     useEffect(() => {
         setMsg(null); // Clear messages on tab change
@@ -37,8 +51,34 @@ export default function PatientDashboard({ user, setUser }) {
             loadDoctors();
         } else if (activeTab === 'appointments') {
             loadAppointments();
+        } else if (activeTab === 'profile') {
+            loadProfile();
         }
     }, [activeTab]);
+
+    const loadProfile = async () => {
+        try {
+            const data = await api.getPatientProfile(user.user_id);
+            setProfileData(prev => ({
+                ...prev,
+                fullName: data.full_name || '',
+                email: data.email || '',
+                medx_id: data.medx_id || '-',
+                profilePhoto: data.profile_photo_url || null,
+                dob: data.dob || '',
+                gender: data.gender || '',
+                bloodType: data.blood_type || '',
+                contactNumber: data.contact_number || '',
+                emergencyContact: data.emergency_contact || '',
+                address: data.address || '',
+                allergies: data.allergies || '',
+                medicalHistory: data.medical_history || '',
+                password: ''
+            }));
+        } catch (e) {
+            console.error("Failed to load profile", e);
+        }
+    };
 
     const loadDoctors = async () => {
         try {
@@ -99,9 +139,20 @@ export default function PatientDashboard({ user, setUser }) {
         try {
             await api.updateProfile(user.user_id, {
                 full_name: profileData.fullName,
-                password: profileData.password || undefined
+                password: profileData.password || undefined,
+                dob: profileData.dob || undefined,
+                gender: profileData.gender || undefined,
+                blood_type: profileData.bloodType || undefined,
+                contact_number: profileData.contactNumber || undefined,
+                emergency_contact: profileData.emergencyContact || undefined,
+                address: profileData.address || undefined,
+                allergies: profileData.allergies || undefined,
+                medical_history: profileData.medicalHistory || undefined,
+                profile_photo_url: profileData.profilePhoto || undefined
             });
-            setMsg({ type: 'success', text: 'Profile updated. Please re-login to see changes.' });
+            setMsg({ type: 'success', text: 'Profile updated successfully!' });
+            setUser({ ...user, user_name: profileData.fullName });
+            loadProfile();
         } catch (e) {
             setMsg({ type: 'error', text: e.message });
         } finally {
@@ -338,40 +389,187 @@ export default function PatientDashboard({ user, setUser }) {
                 })()}
 
                 {activeTab === 'profile' && (
-                    <div className="max-w-2xl mx-auto bg-white/50 backdrop-blur-sm rounded-3xl border border-white/20 p-8 shadow-sm">
-                        <h2 className="text-2xl font-bold mb-6 text-center">Update Profile</h2>
-                        <form onSubmit={handleUpdateProfile} className="space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-foreground">Full Name</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                                    value={profileData.fullName}
-                                    onChange={e => setProfileData({ ...profileData, fullName: e.target.value })}
-                                    required
-                                />
+                    <div className="max-w-4xl mx-auto bg-white rounded-[2.5rem] border border-border/50 p-8 shadow-sm">
+                        <div className="flex flex-col md:flex-row gap-8 items-start mb-10 border-b border-border pb-8">
+                            <div className="flex-shrink-0 relative group cursor-pointer inline-block">
+                                <div className="w-28 h-28 rounded-full border-4 border-white shadow-lg overflow-hidden bg-secondary flex items-center justify-center relative">
+                                    {profileData.profilePhoto ? (
+                                        <img src={profileData.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <User className="w-12 h-12 text-primary/50" />
+                                    )}
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="text-white text-xs font-bold">Edit Photo</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-foreground">New Password <span className="text-muted-foreground font-normal">(Optional)</span></label>
-                                <input
-                                    type="password"
-                                    className="w-full px-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                                    value={profileData.password}
-                                    onChange={e => setProfileData({ ...profileData, password: e.target.value })}
-                                    placeholder="••••••••"
-                                    autoComplete="new-password"
-                                />
+                            <div className="flex-1 mt-2">
+                                <h2 className="text-3xl font-bold text-foreground mb-2">{profileData.fullName}</h2>
+                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full border border-primary/20">
+                                    <Shield className="w-4 h-4 text-primary" />
+                                    <span className="text-sm font-bold text-primary tracking-wide">MedX ID: {profileData.medx_id}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleUpdateProfile} className="space-y-8">
+                            {/* Personal Details */}
+                            <div>
+                                <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><User className="text-blue-500 w-5 h-5"/> Personal Information</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-secondary/20 p-6 rounded-2xl">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-muted-foreground">Full Name</label>
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                            value={profileData.fullName}
+                                            onChange={e => setProfileData({ ...profileData, fullName: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-muted-foreground">Email</label>
+                                        <input
+                                            type="email"
+                                            className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-transparent text-muted-foreground cursor-not-allowed"
+                                            value={profileData.email}
+                                            readOnly
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-muted-foreground">Date of Birth</label>
+                                        <input
+                                            type="date"
+                                            className="w-full px-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 outline-none"
+                                            value={profileData.dob}
+                                            onChange={e => setProfileData({ ...profileData, dob: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-muted-foreground">Gender</label>
+                                        <select
+                                            className="w-full px-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 outline-none"
+                                            value={profileData.gender}
+                                            onChange={e => setProfileData({ ...profileData, gender: e.target.value })}
+                                        >
+                                            <option value="">Select Gender</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Contact Details */}
+                            <div>
+                                <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Phone className="text-green-500 w-5 h-5"/> Contact Details</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-secondary/20 p-6 rounded-2xl">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-muted-foreground">Phone Number</label>
+                                        <input
+                                            type="tel"
+                                            className="w-full px-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 outline-none"
+                                            value={profileData.contactNumber}
+                                            onChange={e => setProfileData({ ...profileData, contactNumber: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-muted-foreground ml-1 flex justify-between items-center">
+                                            Emergency Contact <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full uppercase">Critical</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="Name - Phone"
+                                            className="w-full px-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none"
+                                            value={profileData.emergencyContact}
+                                            onChange={e => setProfileData({ ...profileData, emergencyContact: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-sm font-bold text-muted-foreground">Residential Address</label>
+                                        <textarea
+                                            className="w-full px-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 outline-none resize-none"
+                                            rows="2"
+                                            value={profileData.address}
+                                            onChange={e => setProfileData({ ...profileData, address: e.target.value })}
+                                        ></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Medical Profile */}
+                            <div>
+                                <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Activity className="text-purple-500 w-5 h-5"/> Medical Profile</h3>
+                                <div className="grid grid-cols-1 gap-6 bg-secondary/20 p-6 rounded-2xl">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-muted-foreground">Blood Type</label>
+                                            <select
+                                                className="w-full px-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 outline-none"
+                                                value={profileData.bloodType}
+                                                onChange={e => setProfileData({ ...profileData, bloodType: e.target.value })}
+                                            >
+                                                <option value="">Select</option>
+                                                <option value="A+">A+</option><option value="A-">A-</option>
+                                                <option value="B+">B+</option><option value="B-">B-</option>
+                                                <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                                                <option value="O+">O+</option><option value="O-">O-</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-muted-foreground">Known Allergies</label>
+                                            <input
+                                                type="text"
+                                                placeholder="Peanuts, Penicillin..."
+                                                className="w-full px-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 outline-none"
+                                                value={profileData.allergies}
+                                                onChange={e => setProfileData({ ...profileData, allergies: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-muted-foreground">Past Medical History (Conditions, Surgeries)</label>
+                                        <textarea
+                                            className="w-full px-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 outline-none resize-none"
+                                            rows="3"
+                                            placeholder="Detail significant medical history..."
+                                            value={profileData.medicalHistory}
+                                            onChange={e => setProfileData({ ...profileData, medicalHistory: e.target.value })}
+                                        ></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Security */}
+                            <div>
+                                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">Security</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-secondary/20 p-6 rounded-2xl">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-muted-foreground">Reset Password</label>
+                                        <input
+                                            type="password"
+                                            className="w-full px-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 outline-none"
+                                            value={profileData.password}
+                                            onChange={e => setProfileData({ ...profileData, password: e.target.value })}
+                                            placeholder="Enter new password to change..."
+                                            autoComplete="new-password"
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
                             {msg && (
-                                <div className={`p-4 rounded-xl text-center font-medium ${msg.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+                                <div className={`p-4 rounded-xl text-center font-bold ${msg.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
                                     {msg.text}
                                 </div>
                             )}
 
-                            <button type="submit" disabled={loading} className="w-full py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:shadow-lg hover:bg-primary/90 transition-all disabled:opacity-50">
-                                {loading ? 'Saving Changes...' : 'Save Profile'}
-                            </button>
+                            <div className="flex justify-end pt-4">
+                                <button type="submit" disabled={loading} className="px-8 py-3.5 bg-primary text-primary-foreground font-bold rounded-xl hover:shadow-lg hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center gap-2">
+                                    {loading ? 'Saving Changes...' : 'Save Profile Details'}
+                                </button>
+                            </div>
                         </form>
                     </div>
                 )}

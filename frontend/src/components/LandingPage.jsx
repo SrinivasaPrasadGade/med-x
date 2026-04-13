@@ -14,6 +14,7 @@ import {
     Zap
 } from 'lucide-react';
 import { api } from '../api';
+import { GoogleLogin } from '@react-oauth/google';
 
 const FadeIn = ({ children, delay = 0 }) => (
     <motion.div
@@ -56,6 +57,19 @@ export default function LandingPage({ onEnter }) {
             onEnter(userData);
         } catch (err) {
             setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const userData = await api.googleLogin(credentialResponse.credential);
+            onEnter(userData);
+        } catch (err) {
+            setError(err.message || 'Google Auth Failed');
         } finally {
             setLoading(false);
         }
@@ -158,6 +172,28 @@ export default function LandingPage({ onEnter }) {
                             >
                                 {loading ? 'Processing...' : 'Continue'}
                             </button>
+
+                            {(mode === 'login' || mode === 'register') && (
+                                <div className="mt-6">
+                                    <div className="relative mb-6">
+                                        <div className="absolute inset-0 flex items-center">
+                                            <div className="w-full border-t border-border"></div>
+                                        </div>
+                                        <div className="relative flex justify-center text-sm">
+                                            <span className="px-2 bg-white text-muted-foreground">Or continue with</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-center">
+                                        <GoogleLogin
+                                            onSuccess={handleGoogleSuccess}
+                                            onError={() => setError('Google processing failed')}
+                                            useOneTap={false}
+                                            shape="pill"
+                                            size="large"
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </form>
 
                         <div className="mt-8 pt-6 border-t border-border flex flex-col gap-2 text-center text-sm text-muted-foreground">

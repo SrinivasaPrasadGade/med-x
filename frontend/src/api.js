@@ -67,6 +67,7 @@ export const api = {
     // Auth
     register: (data) => apiRequest('patient', '/register', { method: 'POST', body: JSON.stringify(data) }),
     login: (data) => apiRequest('patient', '/login', { method: 'POST', body: JSON.stringify(data) }),
+    googleLogin: (token) => apiRequest('patient', '/auth/google', { method: 'POST', body: JSON.stringify({ token }) }),
 
     // Organization Management
     // Organization Management
@@ -92,6 +93,7 @@ export const api = {
     getMyAppointments: (patientId) => apiRequest('patient', `/patient/appointments?patient_id=${patientId}`),
     bookAppointment: (data) => apiRequest('patient', '/patient/appointments', { method: 'POST', body: JSON.stringify(data) }),
     cancelMyAppointment: (apptId) => apiRequest('patient', `/patient/appointments/${apptId}/cancel`, { method: 'PUT' }),
+    getPatientProfile: (patientId) => apiRequest('patient', `/patient/profile?patient_id=${patientId}`),
     updateProfile: (patientId, data) => apiRequest('patient', `/patient/profile?patient_id=${patientId}`, { method: 'PUT', body: JSON.stringify(data) }),
 
     // Health checks

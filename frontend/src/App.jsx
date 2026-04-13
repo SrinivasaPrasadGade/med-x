@@ -12,6 +12,7 @@ import OrgDashboard from './components/OrgDashboard'
 import DoctorDashboard from './components/DoctorDashboard'
 import PatientDashboard from './components/PatientDashboard'
 
+import { GoogleOAuthProvider } from '@react-oauth/google'
 import { LogOut, Activity, LayoutDashboard, FileText, Scan, ShieldCheck, Pill } from 'lucide-react'
 
 function App() {
@@ -56,7 +57,12 @@ function App() {
   const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || Dashboard
 
   if (showLanding) {
-    return <LandingPage onEnter={(u) => { setUser(u); setShowLanding(false); }} />
+    const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '1234567890-mock.apps.googleusercontent.com'
+    return (
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <LandingPage onEnter={(u) => { setUser(u); setShowLanding(false); }} />
+      </GoogleOAuthProvider>
+    )
   }
 
   // Common Header Component

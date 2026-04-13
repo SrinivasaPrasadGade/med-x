@@ -123,7 +123,7 @@ class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
+    hashed_password = Column(String, nullable=True)
     full_name = Column(String, nullable=True)
     role = Column(String, default="patient") # patient, doctor, org_admin
     organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=True)
@@ -134,6 +134,13 @@ class User(Base):
     allergies = Column(String, nullable=True) # JSON string or comma-separated
     dob = Column(String, nullable=True)
     gender = Column(String, nullable=True)
+    medx_id = Column(String, unique=True, index=True, nullable=True)
+    profile_photo_url = Column(String, nullable=True)
+    contact_number = Column(String, nullable=True)
+    emergency_contact = Column(String, nullable=True)
+    address = Column(String, nullable=True)
+    medical_history = Column(String, nullable=True)
+    google_id = Column(String, unique=True, nullable=True)
 
     documents = relationship("Document", back_populates="user")
 
@@ -153,6 +160,13 @@ def run_migrations():
                 conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS allergies VARCHAR"))
                 conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS dob VARCHAR"))
                 conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS medx_id VARCHAR"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo_url VARCHAR"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS contact_number VARCHAR"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS emergency_contact VARCHAR"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS address VARCHAR"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS medical_history VARCHAR"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR"))
                 
                 # Create documents table if not exists (create_all handles this usually, but good to be sure for relationships)
                 # Actually create_all below handles new tables. We just need to patch existing ones.
@@ -273,6 +287,18 @@ class AppointmentComplete(BaseModel):
 class PatientProfileUpdate(BaseModel):
     full_name: str
     password: Optional[str] = None
+    dob: Optional[str] = None
+    gender: Optional[str] = None
+    blood_type: Optional[str] = None
+    contact_number: Optional[str] = None
+    emergency_contact: Optional[str] = None
+    address: Optional[str] = None
+    allergies: Optional[str] = None
+    medical_history: Optional[str] = None
+    profile_photo_url: Optional[str] = None
+
+class GoogleAuthRequest(BaseModel):
+    token: str
 
 class UserLogin(BaseModel):
     email: str
@@ -295,8 +321,18 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
     
     hashed_password = get_password_hash(user.password)
+    # Generate random medx_id
+    import random, string
+    medx_id = "MX" + ''.join(random.choices(string.digits, k=8))
+    
     # Default register is patient
-    new_user = User(email=user.email, hashed_password=hashed_password, full_name=user.full_name, role="patient")
+    new_user = User(
+        email=user.email, 
+        hashed_password=hashed_password, 
+        full_name=user.full_name, 
+        role="patient",
+        medx_id=medx_id
+    )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -375,6 +411,75 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(status_code=500, detail=f"Internal Login Error: {str(e)}")
+
+@app.post("/api/auth/google")
+async def google_login(req: GoogleAuthRequest, db: Session = Depends(get_db)):
+    import base64
+    try:
+        # Decode JWT from Google (we trust it for demo purposes, secure impl uses verify_oauth2_token)
+        # Token is payload.header.signature
+        parts = req.token.split('.')
+        if len(parts) < 2:
+            raise ValueError("Invalid token")
+        
+        payload = parts[1]
+        padded_payload = payload + '=' * (-len(payload) % 4)
+        decoded = base64.b64decode(padded_payload).decode('utf-8')
+        user_info = json.loads(decoded)
+        
+        email = user_info.get("email")
+        google_id = user_info.get("sub")
+        full_name = user_info.get("name")
+        picture = user_info.get("picture")
+        
+        if not email:
+            raise HTTPException(status_code=400, detail="Google Auth failed: email not provided.")
+            
+        # Check if user exists by google_id or email
+        db_user = db.query(User).filter((User.google_id == google_id) | (User.email == email)).first()
+        
+        if not db_user:
+            import random, string
+            medx_id = "MX" + ''.join(random.choices(string.digits, k=8))
+            
+            db_user = User(
+                email=email,
+                full_name=full_name,
+                google_id=google_id,
+                profile_photo_url=picture,
+                role="patient",
+                medx_id=medx_id
+            )
+            db.add(db_user)
+            db.commit()
+            db.refresh(db_user)
+        else:
+            # Update missing info if possible
+            if not db_user.google_id:
+                db_user.google_id = google_id
+            if not db_user.profile_photo_url and picture:
+                db_user.profile_photo_url = picture
+            db.commit()
+            
+        org_name = None
+        if db_user.organization_id:
+            org = db.query(Organization).filter(Organization.id == db_user.organization_id).first()
+            if org:
+                org_name = org.name
+                
+        return {
+            "access_token": "fake-jwt-token-for-google", 
+            "token_type": "bearer",
+            "user_name": db_user.full_name or db_user.email.split('@')[0],
+            "user_id": db_user.id,
+            "role": db_user.role,
+            "organization_name": org_name,
+            "organization_id": db_user.organization_id
+        }
+    except Exception as e:
+        print(f"Google Auth Error: {str(e)}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Google Auth failed: {str(e)}")
 
 @app.post("/api/org/doctors")
 async def add_doctor(doctor: OrgDoctorCreate, db: Session = Depends(get_db)):
@@ -609,6 +714,29 @@ async def cancel_patient_appointment(appt_id: int, db: Session = Depends(get_db)
     db.commit()
     return {"status": "success", "message": "Appointment cancelled"}
 
+@app.get("/api/patient/profile")
+async def get_patient_profile(patient_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == patient_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    return {
+        "id": user.id,
+        "email": user.email,
+        "full_name": user.full_name,
+        "medx_id": user.medx_id,
+        "profile_photo_url": user.profile_photo_url,
+        "dob": user.dob,
+        "gender": user.gender,
+        "blood_type": user.blood_type,
+        "contact_number": user.contact_number,
+        "emergency_contact": user.emergency_contact,
+        "address": user.address,
+        "allergies": user.allergies,
+        "medical_history": user.medical_history,
+        "role": user.role
+    }
+
 @app.put("/api/patient/profile")
 async def update_patient_profile(profile: PatientProfileUpdate, patient_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == patient_id).first()
@@ -618,6 +746,16 @@ async def update_patient_profile(profile: PatientProfileUpdate, patient_id: int,
     user.full_name = profile.full_name
     if profile.password:
         user.hashed_password = get_password_hash(profile.password)
+    
+    if profile.dob is not None: user.dob = profile.dob
+    if profile.gender is not None: user.gender = profile.gender
+    if profile.blood_type is not None: user.blood_type = profile.blood_type
+    if profile.contact_number is not None: user.contact_number = profile.contact_number
+    if profile.emergency_contact is not None: user.emergency_contact = profile.emergency_contact
+    if profile.address is not None: user.address = profile.address
+    if profile.allergies is not None: user.allergies = profile.allergies
+    if profile.medical_history is not None: user.medical_history = profile.medical_history
+    if profile.profile_photo_url is not None: user.profile_photo_url = profile.profile_photo_url
     
     db.commit()
     return {"status": "success", "message": "Profile updated"}
