@@ -133,6 +133,7 @@ class User(Base):
     blood_type = Column(String, nullable=True)
     allergies = Column(String, nullable=True) # JSON string or comma-separated
     dob = Column(String, nullable=True)
+    gender = Column(String, nullable=True)
 
     documents = relationship("Document", back_populates="user")
 
@@ -151,6 +152,7 @@ def run_migrations():
                 conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS blood_type VARCHAR"))
                 conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS allergies VARCHAR"))
                 conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS dob VARCHAR"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR"))
                 
                 # Create documents table if not exists (create_all handles this usually, but good to be sure for relationships)
                 # Actually create_all below handles new tables. We just need to patch existing ones.
@@ -244,12 +246,14 @@ class OrgDoctorCreate(BaseModel):
     full_name: str
     specialization: Optional[str] = None
     availability: Optional[str] = None
+    gender: Optional[str] = None
     organization_id: int
 
 class OrgDoctorUpdate(BaseModel):
     full_name: Optional[str] = None
     specialization: Optional[str] = None
     availability: Optional[str] = None
+    gender: Optional[str] = None
 
 class AppointmentCreate(BaseModel):
     doctor_id: int
@@ -391,7 +395,8 @@ async def add_doctor(doctor: OrgDoctorCreate, db: Session = Depends(get_db)):
         role="doctor", 
         organization_id=doctor.organization_id,
         specialization=doctor.specialization,
-        availability=doctor.availability
+        availability=doctor.availability,
+        gender=doctor.gender
     )
     db.add(new_doctor)
     db.commit()
@@ -413,7 +418,8 @@ async def get_doctors(organization_id: int, search: Optional[str] = None, db: Se
         "email": d.email, 
         "specialization": d.specialization,
         "availability": d.availability,
-        "is_active": d.is_active
+        "is_active": d.is_active,
+        "gender": d.gender
     } for d in doctors]
 
 @app.put("/api/org/doctors/{doctor_id}")
@@ -428,6 +434,8 @@ async def update_doctor(doctor_id: int, doctor: OrgDoctorUpdate, db: Session = D
         db_doctor.specialization = doctor.specialization
     if doctor.availability:
         db_doctor.availability = doctor.availability
+    if doctor.gender:
+        db_doctor.gender = doctor.gender
     
     db.commit()
     return {"status": "success", "message": "Doctor updated"}
@@ -536,7 +544,8 @@ async def get_all_doctors(specialization: Optional[str] = None, db: Session = De
         "availability": d.availability,
         "organization_id": d.organization_id,
         "organization_name": d.organization.name if d.organization else "Unknown",
-        "rating": round(random.uniform(3.5, 5.0), 1)
+        "rating": round(random.uniform(3.5, 5.0), 1),
+        "gender": d.gender
     } for d in doctors]
 
 @app.get("/api/patient/appointments")
@@ -544,6 +553,8 @@ async def get_patient_appointments(patient_id: int, db: Session = Depends(get_db
     appointments = db.query(Appointment).filter(Appointment.patient_id == patient_id).order_by(Appointment.date_time.desc()).all()
     return [{
         "id": a.id,
+        "doctor_id": a.doctor.id if a.doctor else None,
+        "organization_id": a.organization_id,
         "doctor_name": a.doctor.full_name if a.doctor else "Unknown",
         "specialization": a.doctor.specialization if a.doctor else "",
         "date_time": a.date_time.isoformat(),

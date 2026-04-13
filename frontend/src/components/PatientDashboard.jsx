@@ -18,8 +18,10 @@ export default function PatientDashboard({ user, setUser }) {
         search: '',
         specialization: '',
         hospital: '',
-        minRating: 0
+        minRating: 0,
+        gender: ''
     });
+    const [apptTab, setApptTab] = useState('upcoming');
     const [selectedDoctor, setSelectedDoctor] = useState(null); // For booking modal
     const [bookingData, setBookingData] = useState({ dateTime: '', reason: '' });
 
@@ -159,7 +161,8 @@ export default function PatientDashboard({ user, setUser }) {
                                 const specMatch = filters.specialization ? (doc.specialization || 'General Practice') === filters.specialization : true;
                                 const hospitalMatch = filters.hospital ? doc.organization_name === filters.hospital : true;
                                 const ratingMatch = filters.minRating ? (doc.rating || 0) >= parseFloat(filters.minRating) : true;
-                                return nameMatch && specMatch && hospitalMatch && ratingMatch;
+                                const genderMatch = filters.gender ? doc.gender === filters.gender : true;
+                                return nameMatch && specMatch && hospitalMatch && ratingMatch && genderMatch;
                             });
 
                             return (
@@ -201,6 +204,16 @@ export default function PatientDashboard({ user, setUser }) {
                                             <option value="4.0">4.0+ Stars</option>
                                             <option value="4.5">4.5+ Stars</option>
                                         </select>
+                                        <select
+                                            className="w-full px-4 py-2.5 bg-white border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                            value={filters.gender}
+                                            onChange={e => setFilters({ ...filters, gender: e.target.value })}
+                                        >
+                                            <option value="">Any Gender</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
                                     </div>
 
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -237,56 +250,92 @@ export default function PatientDashboard({ user, setUser }) {
                     </div>
                 )}
 
-                {activeTab === 'appointments' && (
-                    <div className="bg-white/50 backdrop-blur-sm rounded-3xl border border-white/20 p-6 md:p-8 shadow-sm">
-                        <h2 className="text-2xl font-bold mb-6">My Appointments</h2>
-                        <div className="space-y-4">
-                            {appointments.length === 0 ? (
-                                <p className="text-center py-12 text-muted-foreground">No appointment history found.</p>
-                            ) : (
-                                appointments.map(appt => (
-                                    <div key={appt.id} className={`bg-white p-6 rounded-2xl border-l-[6px] shadow-sm relative overflow-hidden ${appt.status === 'Completed' ? 'border-l-green-500' : appt.status === 'Cancelled' ? 'border-l-red-500' : 'border-l-blue-500'}`}>
-                                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <Calendar className="w-4 h-4 text-muted-foreground" />
-                                                    <span className="font-semibold text-foreground">{new Date(appt.date_time).toLocaleString()}</span>
+                {activeTab === 'appointments' && (() => {
+                    const upcomingApps = appointments.filter(a => a.status === 'Scheduled');
+                    const pastApps = appointments.filter(a => a.status === 'Completed' || a.status === 'Cancelled');
+                    const displayedApps = apptTab === 'upcoming' ? upcomingApps : pastApps;
+
+                    return (
+                        <div className="bg-white/50 backdrop-blur-sm rounded-3xl border border-white/20 p-6 md:p-8 shadow-sm">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+                                <h2 className="text-2xl font-bold">My Appointments</h2>
+                                <div className="flex gap-2 p-1 bg-secondary/50 rounded-xl w-fit">
+                                    <button 
+                                        onClick={() => setApptTab('upcoming')} 
+                                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${apptTab === 'upcoming' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        Upcoming
+                                    </button>
+                                    <button 
+                                        onClick={() => setApptTab('past')} 
+                                        className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${apptTab === 'past' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                                    >
+                                        Past
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="space-y-4">
+                                {displayedApps.length === 0 ? (
+                                    <p className="text-center py-12 text-muted-foreground">No {apptTab} appointments found.</p>
+                                ) : (
+                                    displayedApps.map(appt => (
+                                        <div key={appt.id} className={`bg-white p-6 rounded-2xl border-l-[6px] shadow-sm relative overflow-hidden ${appt.status === 'Completed' ? 'border-l-green-500' : appt.status === 'Cancelled' ? 'border-l-red-500' : 'border-l-blue-500'}`}>
+                                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                                                        <span className="font-semibold text-foreground">{new Date(appt.date_time).toLocaleString()}</span>
+                                                    </div>
+                                                    <div className="text-lg font-bold text-foreground">Dr. {appt.doctor_name} <span className="text-sm font-normal text-muted-foreground">({appt.specialization})</span></div>
                                                 </div>
-                                                <div className="text-lg font-bold text-foreground">Dr. {appt.doctor_name} <span className="text-sm font-normal text-muted-foreground">({appt.specialization})</span></div>
+                                                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${appt.status === 'Completed' ? 'bg-green-100 text-green-700' : appt.status === 'Cancelled' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                                                    {appt.status}
+                                                </span>
                                             </div>
-                                            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${appt.status === 'Completed' ? 'bg-green-100 text-green-700' : appt.status === 'Cancelled' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-                                                {appt.status}
-                                            </span>
+
+                                            <div className="bg-secondary/30 p-4 rounded-xl mb-4">
+                                                <p className="text-sm text-muted-foreground font-medium italic">Reason for visit: "{appt.reason}"</p>
+                                            </div>
+
+                                            {appt.status === 'Completed' && (
+                                                <div className="bg-green-50/50 p-4 rounded-xl border border-green-100">
+                                                    <div className="text-xs font-bold text-green-700 uppercase mb-2">Diagnosis</div>
+                                                    <p className="text-foreground font-medium mb-1">{appt.diagnosis}</p>
+                                                    <p className="text-sm text-muted-foreground">Rx: {appt.treatment_notes}</p>
+                                                </div>
+                                            )}
+
+                                            <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border/50">
+                                                {appt.status === 'Scheduled' && (
+                                                    <button
+                                                        onClick={() => handleCancelAppointment(appt.id)}
+                                                        className="text-sm text-red-500 hover:text-red-700 hover:underline font-medium"
+                                                    >
+                                                        Cancel Appointment
+                                                    </button>
+                                                )}
+                                                {(appt.status === 'Completed' || appt.status === 'Cancelled') && (
+                                                    <button
+                                                        onClick={() => setSelectedDoctor({
+                                                            id: appt.doctor_id,
+                                                            organization_id: appt.organization_id,
+                                                            full_name: appt.doctor_name,
+                                                            specialization: appt.specialization,
+                                                            availability: 'Unknown'
+                                                        })}
+                                                        className="px-4 py-2 bg-secondary text-foreground text-sm font-semibold rounded-lg hover:bg-primary hover:text-white transition-all"
+                                                    >
+                                                        Book Again
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
-
-                                        <div className="bg-secondary/30 p-4 rounded-xl mb-4">
-                                            <p className="text-sm text-muted-foreground font-medium italic">Reason for visit: "{appt.reason}"</p>
-                                        </div>
-
-                                        {appt.status === 'Completed' && (
-                                            <div className="bg-green-50/50 p-4 rounded-xl border border-green-100">
-                                                <div className="text-xs font-bold text-green-700 uppercase mb-2">Diagnosis</div>
-                                                <p className="text-foreground font-medium mb-1">{appt.diagnosis}</p>
-                                                <p className="text-sm text-muted-foreground">Rx: {appt.treatment_notes}</p>
-                                            </div>
-                                        )}
-
-                                        {appt.status === 'Scheduled' && (
-                                            <div className="flex justify-end">
-                                                <button
-                                                    onClick={() => handleCancelAppointment(appt.id)}
-                                                    className="text-sm text-red-500 hover:text-red-700 hover:underline font-medium"
-                                                >
-                                                    Cancel Appointment
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))
-                            )}
+                                    ))
+                                )}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
 
                 {activeTab === 'profile' && (
                     <div className="max-w-2xl mx-auto bg-white/50 backdrop-blur-sm rounded-3xl border border-white/20 p-8 shadow-sm">

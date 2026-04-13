@@ -8,7 +8,7 @@ export default function OrgDashboard({ user }) {
     // Doctor State
     const [doctors, setDoctors] = useState([]);
     const [search, setSearch] = useState('');
-    const [newDoc, setNewDoc] = useState({ fullName: '', email: '', password: '', specialization: '', availability: '' });
+    const [newDoc, setNewDoc] = useState({ fullName: '', email: '', password: '', specialization: '', availability: '', gender: '' });
     const [editingDoc, setEditingDoc] = useState(null); // If set, showing edit modal
 
     // Appointment State
@@ -53,10 +53,11 @@ export default function OrgDashboard({ user }) {
                 full_name: newDoc.fullName,
                 specialization: newDoc.specialization,
                 availability: newDoc.availability,
+                gender: newDoc.gender,
                 organization_id: user.organization_id
             });
             setMsg({ type: 'success', text: 'Doctor added successfully!' });
-            setNewDoc({ fullName: '', email: '', password: '', specialization: '', availability: '' });
+            setNewDoc({ fullName: '', email: '', password: '', specialization: '', availability: '', gender: '' });
             loadDoctors();
         } catch (e) {
             setMsg({ type: 'error', text: e.message });
@@ -81,7 +82,8 @@ export default function OrgDashboard({ user }) {
             await api.updateDoctor(editingDoc.id, {
                 full_name: editingDoc.full_name,
                 specialization: editingDoc.specialization,
-                availability: editingDoc.availability
+                availability: editingDoc.availability,
+                gender: editingDoc.gender
             });
             setEditingDoc(null);
             loadDoctors();
@@ -250,14 +252,29 @@ export default function OrgDashboard({ user }) {
                                     />
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-foreground">Availability</label>
-                                    <input
-                                        className="w-full px-4 py-2.5 bg-secondary/30 border border-transparent rounded-xl focus:bg-white focus:border-primary/20 focus:ring-4 focus:ring-primary/10 outline-none transition-all"
-                                        value={newDoc.availability}
-                                        onChange={e => setNewDoc({ ...newDoc, availability: e.target.value })}
-                                        placeholder="Mon-Fri, 9am - 5pm"
-                                    />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-foreground">Availability</label>
+                                        <input
+                                            className="w-full px-4 py-2.5 bg-secondary/30 border border-transparent rounded-xl focus:bg-white focus:border-primary/20 focus:ring-4 focus:ring-primary/10 outline-none transition-all"
+                                            value={newDoc.availability}
+                                            onChange={e => setNewDoc({ ...newDoc, availability: e.target.value })}
+                                            placeholder="Mon-Fri, 9am - 5pm"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-foreground">Gender</label>
+                                        <select
+                                            className="w-full px-4 py-2.5 bg-secondary/30 border border-transparent rounded-xl focus:bg-white focus:border-primary/20 focus:ring-4 focus:ring-primary/10 outline-none transition-all text-foreground"
+                                            value={newDoc.gender}
+                                            onChange={e => setNewDoc({ ...newDoc, gender: e.target.value })}
+                                        >
+                                            <option value="">Select Gender</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-2">
@@ -455,6 +472,19 @@ export default function OrgDashboard({ user }) {
                                     value={editingDoc.availability || ''}
                                     onChange={e => setEditingDoc({ ...editingDoc, availability: e.target.value })}
                                 />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-foreground">Gender</label>
+                                <select
+                                    className="w-full px-4 py-2.5 bg-white border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                    value={editingDoc.gender || ''}
+                                    onChange={e => setEditingDoc({ ...editingDoc, gender: e.target.value })}
+                                >
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
                             </div>
 
                             <div className="flex gap-4 pt-4">
