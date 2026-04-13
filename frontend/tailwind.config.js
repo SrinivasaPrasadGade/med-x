@@ -49,8 +49,8 @@ export default {
             },
             fontFamily: {
                 sans: [
-                    '"Old Standard TT"',
-                    "serif",
+                    '"Open Sans"',
+                    "sans-serif",
                 ],
             },
             animation: {
