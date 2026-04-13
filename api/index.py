@@ -866,7 +866,7 @@ KEY FEATURES OF MEDX:
 
 Keep your answers concise, helpful, and friendly. Guide the user based on their current context.
 """
-        model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=system_instruction)
+        model = genai.GenerativeModel('gemini-flash-latest', system_instruction=system_instruction)
         
         # Build history for Gemini
         gemini_history = []

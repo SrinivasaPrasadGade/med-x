@@ -80,7 +80,7 @@ async def analyze_clinical_note(patient_id: str, note_text: str, note_date: str 
     """
     if GEMINI_AVAILABLE and os.getenv("GOOGLE_API_KEY"):
         try:
-            model = genai.GenerativeModel('gemini-1.5-pro-latest')
+            model = genai.GenerativeModel('gemini-flash-latest')
             
             prompt = f"{CLINICAL_ANALYSIS_PROMPT}\n\nCLINICAL NOTE:\n{note_text}\n\nEXTRACT all medical entities and return structured JSON as specified."
             
@@ -205,7 +205,7 @@ async def check_drug_interactions(medications: List[str]) -> Dict[str, Any]:
     
     if GEMINI_AVAILABLE and os.getenv("GOOGLE_API_KEY"):
         try:
-            model = genai.GenerativeModel('gemini-1.5-pro-latest')
+            model = genai.GenerativeModel('gemini-flash-latest')
             prompt = f"Check these medications for interactions: {med_list_str}. \nReturn ONLY a JSON object with an 'interactions' array containing objects with: drug_a, drug_b, severity (HIGH/MODERATE/LOW), mechanism, recommendation."
             
             response = model.generate_content(prompt)
@@ -253,7 +253,7 @@ async def de_identify_note(note_text: str) -> str:
     """De-identify clinical note (HIPAA Safe Harbor) using Gemini."""
     if GEMINI_AVAILABLE and os.getenv("GOOGLE_API_KEY"):
         try:
-            model = genai.GenerativeModel('gemini-1.5-pro-latest')
+            model = genai.GenerativeModel('gemini-flash-latest')
             prompt = f"TASK: De-identify Clinical Note (HIPAA Safe Harbor)\n\nCLINICAL NOTE:\n{note_text}\n\nINSTRUCTIONS:\n1. Remove all 18 HIPAA identifiers.\n2. Replace with generic placeholders like [PATIENT_NAME], [DATE].\n3. Preserve clinical context.\n\nOUTPUT: Return the de-identified text ONLY."
             response = model.generate_content(prompt)
             return response.text.strip()
@@ -267,7 +267,7 @@ async def generate_patient_coaching(patient_context: Dict[str, Any]) -> List[Dic
     """
     if GEMINI_AVAILABLE and os.getenv("GOOGLE_API_KEY"):
         try:
-            model = genai.GenerativeModel('gemini-1.5-pro-latest')
+            model = genai.GenerativeModel('gemini-flash-latest')
             prompt = f"TASK: Generate Personalized Patient Adherence Coaching\n\nCONTEXT:\n{json.dumps(patient_context)}\n\nGENERATE JSON array of coaching cards with keys: medication, message (patient-friendly), timing, importance (high/medium/low)."
             
             response = model.generate_content(prompt)
