@@ -44,6 +44,7 @@ export const api = {
     addMedication: (data) => apiRequest('patient', '/medications', { method: 'POST', body: JSON.stringify(data) }),
     deleteMedication: (id) => apiRequest('patient', `/medications/${id}`, { method: 'DELETE' }),
     logAdherence: (data) => apiRequest('patient', '/adherence', { method: 'POST', body: JSON.stringify(data) }),
+    getAdherence: () => apiRequest('patient', '/adherence'),
 
     // AI Service
     analyzeNote: (data) => apiRequest('ai', '/analyze-note', { method: 'POST', body: JSON.stringify(data) }),

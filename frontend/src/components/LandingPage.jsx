@@ -136,11 +136,11 @@ export default function LandingPage({ onEnter }) {
                             )}
 
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-foreground ml-1">Email</label>
+                                <label className="text-sm font-semibold text-foreground ml-1">Email or Mobile Number</label>
                                 <input
                                     className="w-full px-4 py-3 rounded-xl bg-secondary/50 border border-transparent focus:bg-white focus:border-primary/20 focus:ring-4 focus:ring-primary/10 transition-all outline-none"
-                                    type="email"
-                                    placeholder="name@example.com"
+                                    type="text"
+                                    placeholder="name@example.com or +123456789"
                                     required
                                     value={formData.email}
                                     onChange={e => setFormData({ ...formData, email: e.target.value })}

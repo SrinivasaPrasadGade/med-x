@@ -13,10 +13,22 @@ export default function MedicationManager() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
 
+    const [adherenceLogs, setAdherenceLogs] = useState([])
+
     // Load medications on mount
     useEffect(() => {
         loadMedications()
+        loadAdherenceLogs()
     }, [])
+
+    const loadAdherenceLogs = async () => {
+        try {
+            const data = await api.getAdherence()
+            setAdherenceLogs(data.reverse()) // show newest first
+        } catch (err) {
+            console.error("Failed to load adherence", err)
+        }
+    }
 
     const loadMedications = async () => {
         setLoading(true)
@@ -54,9 +66,9 @@ export default function MedicationManager() {
                 status: status,
                 timestamp: new Date().toISOString()
             })
-            // Optimistic update or refresh? Refreshing for now to be safe with stats
+            // Refresh data
             loadMedications()
-            // Optional: User feedback toast could go here
+            loadAdherenceLogs()
         } catch (err) {
             setError(String(err.message || err))
         }
@@ -225,56 +237,63 @@ export default function MedicationManager() {
                         </h3>
 
                         <div className="text-center mb-8">
-                            <div className="inline-flex items-center justify-center w-32 h-32 rounded-full border-[6px] border-primary/20 bg-white relative">
-                                <span className="text-3xl font-black text-foreground">92%</span>
-                                <svg className="absolute inset-0 w-full h-full -rotate-90 text-primary" viewBox="0 0 100 100">
-                                    <circle
-                                        className="text-primary stroke-current"
-                                        strokeWidth="6"
-                                        strokeLinecap="round"
-                                        cx="50" cy="50" r="46"
-                                        fill="transparent"
-                                        strokeDasharray="289.02652413026095"
-                                        strokeDashoffset="23.12"
-                                    ></circle>
-                                </svg>
-                            </div>
-                            <p className="text-sm font-medium text-green-600 mt-2">Excellent! Keep it up.</p>
+                            {(() => {
+                                const totalLogs = adherenceLogs.length;
+                                const takenLogs = adherenceLogs.filter(log => log.status === 'taken').length;
+                                const score = totalLogs > 0 ? Math.round((takenLogs / totalLogs) * 100) : 0;
+                                const strokeDashoffset = 289.02652413026095 - (289.02652413026095 * score) / 100;
+                                return (
+                                    <>
+                                        <div className="inline-flex items-center justify-center w-32 h-32 rounded-full border-[6px] border-primary/20 bg-white relative">
+                                            <span className="text-3xl font-black text-foreground">{score}%</span>
+                                            <svg className="absolute inset-0 w-full h-full -rotate-90 text-primary" viewBox="0 0 100 100">
+                                                <circle
+                                                    className="text-primary stroke-current"
+                                                    strokeWidth="6"
+                                                    strokeLinecap="round"
+                                                    cx="50" cy="50" r="46"
+                                                    fill="transparent"
+                                                    strokeDasharray="289.02652413026095"
+                                                    strokeDashoffset={strokeDashoffset}
+                                                    style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
+                                                ></circle>
+                                            </svg>
+                                        </div>
+                                        <p className="text-sm font-medium text-green-600 mt-2">
+                                            {score >= 80 ? 'Excellent! Keep it up.' : score >= 50 ? 'Good, but there is room for improvement.' : 'Needs improvement. Stay on track!'}
+                                        </p>
+                                    </>
+                                )
+                            })()}
                         </div>
 
                         <div className="space-y-4">
                             <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-widest border-b border-border/50 pb-2">Recent Logs</h4>
                             <div className="space-y-3">
-                                <div className="flex justify-between items-center text-sm">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                        <div>
-                                            <div className="font-bold text-foreground">Lisinopril</div>
-                                            <div className="text-xs text-muted-foreground">Today, 8:00 AM</div>
-                                        </div>
-                                    </div>
-                                    <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-100 text-green-700">Taken</span>
-                                </div>
-                                <div className="flex justify-between items-center text-sm">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                        <div>
-                                            <div className="font-bold text-foreground">Metformin</div>
-                                            <div className="text-xs text-muted-foreground">Today, 8:30 AM</div>
-                                        </div>
-                                    </div>
-                                    <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-100 text-green-700">Taken</span>
-                                </div>
-                                <div className="flex justify-between items-center text-sm">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                                        <div>
-                                            <div className="font-bold text-foreground">Metformin</div>
-                                            <div className="text-xs text-muted-foreground">Yesterday, 8:30 PM</div>
-                                        </div>
-                                    </div>
-                                    <span className="px-2 py-0.5 rounded text-xs font-bold bg-yellow-100 text-yellow-700">Skipped</span>
-                                </div>
+                                {adherenceLogs.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground italic">No logs yet.</p>
+                                ) : (
+                                    adherenceLogs.slice(0, 5).map((log, index) => {
+                                        const med = medications.find(m => m.id === log.medication_id);
+                                        const isTaken = log.status === 'taken';
+                                        return (
+                                            <div key={index} className="flex justify-between items-center text-sm">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-2 h-2 rounded-full ${isTaken ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                                                    <div>
+                                                        <div className="font-bold text-foreground">{med ? med.name : 'Unknown Med'}</div>
+                                                        <div className="text-xs text-muted-foreground">
+                                                            {new Date(log.timestamp).toLocaleDateString()} {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' })}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${isTaken ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                                    {log.status}
+                                                </span>
+                                            </div>
+                                        )
+                                    })
+                                )}
                             </div>
                         </div>
 

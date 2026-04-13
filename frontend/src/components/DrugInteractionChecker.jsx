@@ -57,7 +57,7 @@ export default function DrugInteractionChecker() {
     }
 
     return (
-        <div className="animate-fade-in max-w-4xl mx-auto pb-16">
+        <div className="animate-fade-in max-w-6xl mx-auto pb-16">
             <div className="text-center mb-10 space-y-4">
                 <h1 className="text-4xl font-bold tracking-tight text-foreground">Drug Interaction Safety</h1>
                 <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -65,9 +65,9 @@ export default function DrugInteractionChecker() {
                 </p>
             </div>
 
-            <div className="grid md:grid-cols-5 gap-8">
+            <div className="grid md:grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Input Section */}
-                <div className="md:col-span-2 bg-white/50 backdrop-blur-sm rounded-3xl border border-white/20 p-6 shadow-sm h-fit">
+                <div className="lg:col-span-1 bg-white/50 backdrop-blur-sm rounded-3xl border border-white/20 p-6 shadow-sm h-fit">
                     <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
                         <Shield className="w-5 h-5 text-primary" /> Active Regimen
                     </h3>
@@ -148,7 +148,7 @@ export default function DrugInteractionChecker() {
                 </div>
 
                 {/* Results Section */}
-                <div className="md:col-span-3">
+                <div className="lg:col-span-2">
                     {result ? (
                         <div className="space-y-6 animate-in fade-in slide-in-from-right-5 duration-500">
                             {/* Interactions Found */}

@@ -23,7 +23,7 @@ export default function PatientDashboard({ user, setUser }) {
     });
     const [apptTab, setApptTab] = useState('upcoming');
     const [selectedDoctor, setSelectedDoctor] = useState(null); // For booking modal
-    const [bookingData, setBookingData] = useState({ dateTime: '', reason: '' });
+    const [bookingData, setBookingData] = useState({ date: '', time: '', reason: '' });
 
     // My Health State
     const [appointments, setAppointments] = useState([]);
@@ -109,11 +109,11 @@ export default function PatientDashboard({ user, setUser }) {
                 organization_id: selectedDoctor.organization_id,
                 patient_id: user.user_id,
                 patient_name: user.user_name,
-                date_time: bookingData.dateTime,
+                date_time: `${bookingData.date}T${bookingData.time}`,
                 reason: bookingData.reason
             });
             setMsg({ type: 'success', text: 'Appointment booked successfully!' });
-            setBookingData({ dateTime: '', reason: '' });
+            setBookingData({ date: '', time: '', reason: '' });
             setSelectedDoctor(null);
         } catch (e) {
             setMsg({ type: 'error', text: e.message });
@@ -180,7 +180,7 @@ export default function PatientDashboard({ user, setUser }) {
                     { id: 'findCare', label: 'Find Care', icon: '🔍' },
                     { id: 'appointments', label: 'My Appointments', icon: '📅' },
                     { id: 'medications', label: 'My Medications', icon: '💊' },
-                    { id: 'scanner', label: 'Smart Scanner', icon: '📸' },
+                    { id: 'scanner', label: 'Scanner Doc', icon: '🖨️' },
                     { id: 'interactions', label: 'Drug Safety', icon: '🛡️' },
                     { id: 'documents', label: 'Documents', icon: '📂' },
                     { id: 'profile', label: 'Profile', icon: '👤' },
@@ -613,16 +613,30 @@ export default function PatientDashboard({ user, setUser }) {
                         </div>
 
                         <form onSubmit={handleBookAppointment} className="p-6 space-y-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-foreground">Date & Time</label>
-                                <input
-                                    type="datetime-local"
-                                    className="w-full px-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                                    value={bookingData.dateTime}
-                                    onChange={e => setBookingData({ ...bookingData, dateTime: e.target.value })}
-                                    required
-                                />
-                                <p className="text-xs text-yellow-600 flex items-center gap-1">
+                            <div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-foreground">Date</label>
+                                        <input
+                                            type="date"
+                                            className="w-full px-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                            value={bookingData.date}
+                                            onChange={e => setBookingData({ ...bookingData, date: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-foreground">Time</label>
+                                        <input
+                                            type="time"
+                                            className="w-full px-4 py-3 rounded-xl bg-white border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                            value={bookingData.time}
+                                            onChange={e => setBookingData({ ...bookingData, time: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <p className="text-xs text-yellow-600 flex items-center gap-1 mt-2">
                                     <AlertTriangle className="w-3 h-3" /> Please ensure time matches doctor availability.
                                 </p>
                             </div>

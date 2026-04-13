@@ -316,9 +316,12 @@ class VerifyPasswordRequest(BaseModel):
 # Endpoints
 @app.post("/api/register")
 async def register(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.email == user.email).first()
+    identifier = user.email.strip()
+    is_email = "@" in identifier
+
+    db_user = db.query(User).filter((User.email == identifier) | (User.contact_number == identifier)).first()
     if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="Email or mobile already registered")
     
     hashed_password = get_password_hash(user.password)
     # Generate random medx_id
@@ -327,7 +330,8 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     
     # Default register is patient
     new_user = User(
-        email=user.email, 
+        email=identifier if is_email else None,
+        contact_number=identifier if not is_email else None,
         hashed_password=hashed_password, 
         full_name=user.full_name, 
         role="patient",
@@ -345,10 +349,13 @@ async def register_org(org: OrgCreate, db: Session = Depends(get_db)):
     if db_org:
         raise HTTPException(status_code=400, detail="Organization already exists")
     
+    identifier = org.admin_email.strip()
+    is_email = "@" in identifier
+
     # Check if admin email exists
-    db_user = db.query(User).filter(User.email == org.admin_email).first()
+    db_user = db.query(User).filter((User.email == identifier) | (User.contact_number == identifier)).first()
     if db_user:
-        raise HTTPException(status_code=400, detail="Admin email already registered")
+        raise HTTPException(status_code=400, detail="Admin email or mobile already registered")
 
     # Create Org
     new_org = Organization(name=org.org_name)
@@ -359,7 +366,8 @@ async def register_org(org: OrgCreate, db: Session = Depends(get_db)):
     # Create Admin User
     hashed_password = get_password_hash(org.admin_password)
     new_admin = User(
-        email=org.admin_email, 
+        email=identifier if is_email else None,
+        contact_number=identifier if not is_email else None,
         hashed_password=hashed_password, 
         full_name=org.admin_name, 
         role="org_admin", 
@@ -377,7 +385,10 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
         if startup_error:
             raise HTTPException(status_code=500, detail=f"Database startup failed: {startup_error}")
 
-        db_user = db.query(User).filter(User.email == user.email).first()
+        identifier = user.email.strip()
+        db_user = db.query(User).filter(
+            (User.email == identifier) | (User.contact_number == identifier)
+        ).first()
         if not db_user or not verify_password(user.password, db_user.hashed_password):
             # For demo: if no user exists, maybe auto-create one? 
             # No, let's stick to error. BUT, if it is a fresh /tmp DB, there are no users.
@@ -489,12 +500,16 @@ async def add_doctor(doctor: OrgDoctorCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Organization not found")
 
     # Check if doctor email exists
-    if db.query(User).filter(User.email == doctor.email).first():
-        raise HTTPException(status_code=400, detail="Email already registered")
+    identifier = doctor.email.strip()
+    is_email = "@" in identifier
+
+    if db.query(User).filter((User.email == identifier) | (User.contact_number == identifier)).first():
+        raise HTTPException(status_code=400, detail="Email or mobile already registered")
 
     hashed_password = get_password_hash(doctor.password)
     new_doctor = User(
-        email=doctor.email, 
+        email=identifier if is_email else None,
+        contact_number=identifier if not is_email else None,
         hashed_password=hashed_password, 
         full_name=doctor.full_name, 
         role="doctor", 
@@ -818,6 +833,10 @@ async def log_adherence(data: Dict[str, Any]):
         "status": data.get("status", "Logged")
     })
     return {"status": "success"}
+
+@app.get("/api/adherence")
+async def get_adherence():
+    return db.adherence
 
 @app.post("/api/analyze-note")
 async def analyze_note(note: ClinicalNote):

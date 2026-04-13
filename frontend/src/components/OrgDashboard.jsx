@@ -241,14 +241,14 @@ export default function OrgDashboard({ user }) {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-foreground">Email Address</label>
+                                    <label className="text-sm font-semibold text-foreground">Email or Mobile Number</label>
                                     <input
-                                        type="email"
+                                        type="text"
                                         className="w-full px-4 py-2.5 bg-secondary/30 border border-transparent rounded-xl focus:bg-white focus:border-primary/20 focus:ring-4 focus:ring-primary/10 outline-none transition-all"
                                         value={newDoc.email}
                                         onChange={e => setNewDoc({ ...newDoc, email: e.target.value })}
                                         required
-                                        placeholder="doctor@healthbridge.com"
+                                        placeholder="doctor@healthbridge.com or +123456789"
                                     />
                                 </div>
 

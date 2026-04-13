@@ -49,7 +49,7 @@ function App() {
   const tabs = [
     { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, component: Dashboard },
     { id: 'clinical', label: 'Clinical Intelligence', icon: FileText, component: ClinicalNoteAnalyzer },
-    { id: 'prescription', label: 'Smart Scanner', icon: Scan, component: PrescriptionScanner },
+    { id: 'prescription', label: 'Scanner Doc', icon: Scan, component: PrescriptionScanner },
     { id: 'interactions', label: 'Safety Guard', icon: ShieldCheck, component: DrugInteractionChecker },
     { id: 'medications', label: 'Patient Care', icon: Pill, component: MedicationManager }
   ]
